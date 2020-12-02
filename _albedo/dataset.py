@@ -16,7 +16,7 @@ class DataSet(param.Parameterized):
     #TODO: transform constants. i.e. richdem vert. exagg.
     
     #filepath constants
-    pointcloud_directory = os.path.join(os.getcwd(), 'bokeh-app', 'data', 'pointclouds')
+    pointcloud_directory = os.path.join(os.getcwd(), 'data', 'pointclouds')
     #pointcloud_directory = os.path.join(os.path.dirname(__file__), 'data', 'pointclouds')
     #pointcloud_directory = os.path.dirname('data/pointclouds/')
     #pointcloud_directory='data/pointclouds'
@@ -27,7 +27,7 @@ class DataSet(param.Parameterized):
     pointclouds.sort()
     pc_count = len(pointclouds)
     
-    rad_directory = os.path.join(os.getcwd(), 'bokeh-app', 'data', 'radiometers')
+    rad_directory = os.path.join(os.getcwd(), 'data', 'radiometers')
     #rad_directory = os.path.join(os.path.dirname(__file__), 'data', 'radiometers')
     #rad_directory = os.path.dirname('data/radiometers/')
     #rad_directory = 'data/radiometers'
