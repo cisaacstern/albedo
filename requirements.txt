@@ -1,4 +1,10 @@
-panel
-hvplot
-scikit-learn
-nbconvert
+- bokeh
+- pandas
+- numpy
+- scipy
+- pip
+- panel
+- param
+- matplotlib
+- richdem
+- pysolar
