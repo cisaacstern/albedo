@@ -65,15 +65,15 @@ class DashLayout(dashtutorial.DashTutorial):
             return pn.pane.Markdown('Plots will load when model is complete.')
         elif self.modelComplete == 'Complete':
             self.run_accordion = pn.Accordion(
-                pn.Row(self.tryptic,
+                pn.Row('A model-specific tryptic will go here',
                        name='Rasters',
                        width=900
                       ),
-                pn.Column(pn.Row(self.polarAxes, self.plotMRaster, self.plotMask),
+                pn.Column('Model-specific sun pos, M, and horzion plots will go here',
                           name='Sun Position, Terrain Correction, Horizons',
                           width=900
                          ),
-                pn.Column(self.timeSeries_Plot,
+                pn.Column('A model-specific timeseries plot will go here',
                           name='Time Series Plot',
                           width=900
                          ),
@@ -140,7 +140,7 @@ class DashLayout(dashtutorial.DashTutorial):
                                                ),
                                          pn.Row(self.run_tab_horizon, self.run_tab_time)
                                         ),
-                               self.timeseries_control
+                               self.run_tab_timeseries_control
                               ),
                         self.return_run_accordion,
                         name='Run',

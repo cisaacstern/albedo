@@ -13,9 +13,8 @@ class DashControls(runmodel.RunModel):
                     )
         )
         self.run_tab_time = pn.WidgetBox(
-            pn.Param(self.param, parameters=['timePoint'], 
-                     widgets={'timePoint':{'widget_type': pn.widgets.IntSlider, 'width': 150}},
-                     height=70, width=210, name='Time'
+            pn.Param(self.param, parameters=[], 
+                     height=70, width=210, name='Model Time'
                     )
         )
         self.pointcloud_control = pn.WidgetBox(
@@ -45,10 +44,8 @@ class DashControls(runmodel.RunModel):
             )
         )
         self.run_tab_horizon = pn.WidgetBox(
-            pn.Param(self.param, parameters=['activateMask'],
-                     widgets={'activateMask':{'widget_type': pn.widgets.RadioBoxGroup, 
-                                              'inline': False}},
-                     height=70, width=110, name='Horizon Mask'
+            pn.Param(self.param, parameters=[],
+                     height=70, width=110, name='Model Horz Mask'
                     )
         )
         self.timeseries_control = pn.WidgetBox(
@@ -59,4 +56,11 @@ class DashControls(runmodel.RunModel):
                      width=530, height=262, name='Select Curves'
                     )
         )
+        
+        self.run_tab_timeseries_control = pn.WidgetBox(
+            pn.Param(self.param, parameters=[], 
+                     width=530, height=262, name='Model Select Curves'
+                    )
+        )
+
         return
