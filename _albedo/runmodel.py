@@ -1,6 +1,7 @@
 import _albedo.plotmethods as plotmethods
 import param
 import numpy as np
+import matplotlib.pyplot as plt
 
 class RunModel(plotmethods.PlotMethods):
     
@@ -19,6 +20,7 @@ class RunModel(plotmethods.PlotMethods):
             #TODO: viz_percent_list = []
             #TODO: self.model_dataframe = self.dataframe ----> statically "snapshot" all this. for downstream speed.
             for index in range(0, col_count):
+                plt.close('all')
                 self.timePoint = index
                 img = self.M_calculation(df=self.dataframe, 
                                          row=index,
