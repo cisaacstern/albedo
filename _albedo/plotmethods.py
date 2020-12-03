@@ -111,13 +111,11 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig 
         
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'chooseTimeSeries', 'timePoint', 
+                   'dateIndex', 'chooseTimeSeries', 
                    'resolution', 'sigma', 'vertEx')
     def timeSeries_Plot(self):
         '''
         plots a time series, given set of times and a tuple of y's.
-        also plots a vertical time marker at x = times[timePoint],
-        where timePoint is an integer/index value.
         '''
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
@@ -138,26 +136,26 @@ class PlotMethods(rasterproducts.RasterProducts):
             upGlobal, downDiffuse, downDirect, M_planar, Albedo_planar = vals    
             downDirect = downDirect - downDiffuse
 
-            meanM = self.meanM_list
+            #meanM = self.meanM_list
             #maskedmeanM = self.maskedmeanM_list
 
-            meanAlpha = self.meanAlpha_list
+            #meanAlpha = self.meanAlpha_list
 
             IDR_Recon_Planar = M_planar*downDirect
-            IDR_Recon_RasterMean = meanM*downDirect
+            #IDR_Recon_RasterMean = meanM*downDirect
             #TODO: radRecon_maskedmeanM = maskedmeanM*downDirect
 
             d = {'Rad_Meas: Global Up': [upGlobal, 'salmon'], 
                 'Rad_Meas: Direct Down': [downDirect, 'orange'], 
                 'Rad_Meas: Diffuse Down': [downDiffuse, 'peachpuff'],
                 'M: Planar': [M_planar, 'mediumorchid'],
-                'M: Raster Mean': [meanM, 'indigo'], 
+                #'M: Raster Mean': [meanM, 'indigo'], 
                 #'M: Horizon Mean' : [maskedmeanM, 'green'],
                 'Alpha: Planar': [Albedo_planar, 'darkturquoise'],
-                'Alpha: Raster Mean': [meanAlpha, 'darkcyan'],
+                #'Alpha: Raster Mean': [meanAlpha, 'darkcyan'],
                 #'Albedo: Horizon Mean': [maskedmeanAlpha, 'orange'], 
                 'IDR_Recon: Planar': [IDR_Recon_Planar, 'orange'], 
-                'IDR_Recon: Raster Mean': [IDR_Recon_RasterMean, 'red']#,
+                #'IDR_Recon: Raster Mean': [IDR_Recon_RasterMean, 'red']#,
                 #'Mean Raster M (Masked) Direct' 
                 }
 
@@ -189,9 +187,9 @@ class PlotMethods(rasterproducts.RasterProducts):
                 par2.plot(times, par2_val, c=par2_color)
 
             #vertical timePoint marker
-            ylims = ax.get_ylim()
-            ax.vlines(x=times.iloc[timePoint], ymin=0, ymax=ylims[1],
-                      color='k', linestyles='dotted')
+            #ylims = ax.get_ylim()
+            #ax.vlines(x=times.iloc[timePoint], ymin=0, ymax=ylims[1],
+            #          color='k', linestyles='dotted')
 
             plt.close()
 

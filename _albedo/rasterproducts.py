@@ -3,7 +3,7 @@ import param
 import numpy as np
 
 class RasterProducts(setmasks.SetMasks):
-    
+    '''
     @param.depends('dateIndex', 'resolution', 'sigma')
     def calc_meanM_list(self):
         col_count = self.dataframe.shape[0]
@@ -28,3 +28,5 @@ class RasterProducts(setmasks.SetMasks):
                                               choice = 'raster'))
             self.meanAlpha_list = meanAlpha_list
         return
+    '''
+    pass

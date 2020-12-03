@@ -83,7 +83,7 @@ class DashLayout(dashtutorial.DashTutorial):
     def set_layout(self):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
-            self.set_axes, self.calc_meanM_list, self.calc_meanAlpha_list,
+            self.set_axes, #self.calc_meanM_list, self.calc_meanAlpha_list,
             self.set_m, self.set_masks, self.run_model, self.reset_run_state,
             sizing_mode='scale_both'
         )

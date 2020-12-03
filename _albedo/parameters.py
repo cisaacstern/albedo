@@ -17,14 +17,14 @@ class Parameters(dataset.DataSet):
     vertEx     = param.Number(86.3, bounds=(0, 150))
     
     chooseTimeSeries = param.ListSelector(default=['Rad_Meas: Global Up', 'Rad_Meas: Direct Down', 'Rad_Meas: Diffuse Down',
-                                                   'M: Planar', 'M: Raster Mean', #'M: Horizon Mean',
-                                                   'Alpha: Planar', 'Alpha: Raster Mean', #'Alpha: Horizon Mean',
-                                                   'IDR_Recon: Planar', 'IDR_Recon: Raster Mean'#, #'IDR_Recon: Horizon Mean',
+                                                   'M: Planar', #'M: Raster Mean', #'M: Horizon Mean',
+                                                   'Alpha: Planar', #'Alpha: Raster Mean', #'Alpha: Horizon Mean',
+                                                   'IDR_Recon: Planar', #'IDR_Recon: Raster Mean'#, #'IDR_Recon: Horizon Mean',
                                                   ],
                                           objects=['Rad_Meas: Global Up', 'Rad_Meas: Direct Down', 'Rad_Meas: Diffuse Down',
-                                                   'M: Planar', 'M: Raster Mean', 'M: Horizon Mean',
-                                                   'Alpha: Planar', 'Alpha: Raster Mean', 'Alpha: Horizon Mean',
-                                                   'IDR_Recon: Planar', 'IDR_Recon: Raster Mean', 'IDR_Recon: Horizon Mean',
+                                                   'M: Planar', #'M: Raster Mean', 'M: Horizon Mean',
+                                                   'Alpha: Planar', #'Alpha: Raster Mean', 'Alpha: Horizon Mean',
+                                                   'IDR_Recon: Planar', #'IDR_Recon: Raster Mean', 'IDR_Recon: Horizon Mean',
                                                   ]
                                          )
     
