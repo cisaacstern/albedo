@@ -8,9 +8,9 @@ class TimeSeries(griddata.GridData):
     
     def return_dataframe(self):
         '''
-        loads a dataframe of radiometer data for the specified dateIndex
+        loads a dataframe of radiometer data for the specified date
         '''
-        return pd.read_csv(self.rad_directory + '/' + self.radiometers[self.dateIndex])
+        return pd.read_csv(self.rad_directory + '/' + self.radiometers[self.date])
     
     def drop_ncols_nrows(self):
         '''

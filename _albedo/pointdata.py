@@ -5,9 +5,9 @@ from scipy import linalg
 
 class PointData(parameters.Parameters):
     
-    @param.depends('dateIndex')
+    @param.depends('date')
     def set_filename(self):
-        self.filename = self.pointclouds[self.dateIndex]
+        self.filename = self.pointclouds[self.date]
     
     def datetime2xyz(self):
         '''

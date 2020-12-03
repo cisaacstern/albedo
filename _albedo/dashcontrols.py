@@ -5,9 +5,9 @@ class DashControls(runmodel.RunModel):
 
     def set_controls(self):
         self.file_selector = pn.WidgetBox(
-            pn.Param(self.param, parameters=['dateIndex'], 
-                     widgets={'dateIndex':{'widget_type': pn.widgets.IntSlider, 
-                                           'width': 80}},
+            pn.Param(self.param, parameters=['date'], 
+                     widgets={'date':{'widget_type': pn.widgets.DiscreteSlider, 
+                                      'width': 80}},
                      width=100, name='File'
                     )
         )

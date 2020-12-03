@@ -1,4 +1,4 @@
-import param, os, datetime
+import param, os, datetime, itertools
 
 class DataSet(param.Parameterized):
     
@@ -63,4 +63,11 @@ class DataSet(param.Parameterized):
     
     #for passing to Paramaters
     indexLength = pc_count-1
-    dateIndex = param.Integer(default=0, bounds=(0, indexLength))
+    
+    date_dict = {}
+    for index, date in enumerate(enabledDays, start=0):
+        date_string = date.strftime("%Y-%m-%d")
+        date_dict[date_string] = index
+    
+    date = param.Selector(default=0, objects=date_dict)
+    #date = param.Integer(default=0, bounds=(0, indexLength))

@@ -7,7 +7,7 @@ import numpy as np
 class PlotMethods(rasterproducts.RasterProducts):
     
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'elev', 'azim', 'choose3d')
+                   'date', 'elev', 'azim', 'choose3d')
     def axes3d(self, figsize=(6,6), topMargin=1.2, bottomMargin=0):
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
@@ -39,7 +39,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'resolution', 'sigma', 'vertEx',
+                   'date', 'resolution', 'sigma', 'vertEx',
                    'timePoint', 'activateMask')
     def tryptic(self, figsize=(12,4), wspace=0.2, hspace=0, 
                 leftMargin=0.05, rightMargin=1, topMargin=1, bottomMargin=0):
@@ -74,7 +74,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'timePoint')
+                   'date', 'timePoint')
     def polarAxes(self, figsize=(4,4), topMargin=1, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
@@ -114,7 +114,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig 
         
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'chooseTimeSeries', 
+                   'date', 'chooseTimeSeries', 
                    'resolution', 'sigma', 'vertEx')
     def timeSeries_Plot(self):
         '''

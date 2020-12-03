@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 
 class DashLayout(dashtutorial.DashTutorial):
     
-    @param.depends('dateIndex', 'resolution', 'sigma',
+    @param.depends('date', 'resolution', 'sigma',
                    'vertEx', 'bins')
     def return_config_pane(self):
         
         def grab_config():
             config_obj = {
                 'SnowSeason': '18-19',
-                'DateIndex': self.dateIndex,
+                'Date': self.date,
                 'Raster': {'Resolution': self.resolution,
                            'Sigma': self.sigma,
                            'Vert Exag': self.vertEx},

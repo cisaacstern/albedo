@@ -7,13 +7,13 @@ from mpl_toolkits import axisartist
 
 class SetFrame(timeseries.TimeSeries):
     
-    @param.depends('dateIndex')
+    @param.depends('date')
     def set_dataframe(self):
         self.dataframe = self.df_add_Ap()
         self.param.timePoint.bounds = (0, self.dataframe.shape[0]-1)
         return
     
-    @param.depends('dateIndex', 'resolution', 'sigma', 'vertEx')
+    @param.depends('date', 'resolution', 'sigma', 'vertEx')
     def set_raster(self):
         self.elevRast, self.slopeRast, self.aspectRast = self.griddata_transforms()
         return
