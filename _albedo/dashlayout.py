@@ -143,8 +143,7 @@ class DashLayout(dashtutorial.DashTutorial):
                                self.run_tab_timeseries_control
                               ),
                         self.return_run_accordion,
-                        name='Run',
-                        dynamic=True
+                        name='Run'
                     ),
                     pn.Row(pn.Spacer(width=10),
                            name='Analyze'
