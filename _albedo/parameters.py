@@ -34,7 +34,8 @@ class Parameters(dataset.DataSet):
     
     run = param.Boolean(False)
     
-    progress = pn.widgets.Progress(name='Progress', width=80, value=0, bar_color='info')
+    progress = pn.widgets.Progress(name='Progress', width=450, height=25,
+                                   value=0, bar_color='info')
     
     modelComplete = param.ObjectSelector(default="Incomplete", 
                                          objects=["Incomplete", "Running", "Complete"])

@@ -17,9 +17,6 @@ class DataSet(param.Parameterized):
     
     #filepath constants
     pointcloud_directory = os.path.join(os.getcwd(), 'data', 'pointclouds')
-    #pointcloud_directory = os.path.join(os.path.dirname(__file__), 'data', 'pointclouds')
-    #pointcloud_directory = os.path.dirname('data/pointclouds/')
-    #pointcloud_directory='data/pointclouds'
     
     pointclouds = []
     for file in os.listdir(pointcloud_directory): 
@@ -28,9 +25,6 @@ class DataSet(param.Parameterized):
     pc_count = len(pointclouds)
     
     rad_directory = os.path.join(os.getcwd(), 'data', 'radiometers')
-    #rad_directory = os.path.join(os.path.dirname(__file__), 'data', 'radiometers')
-    #rad_directory = os.path.dirname('data/radiometers/')
-    #rad_directory = 'data/radiometers'
     radiometers = []
     with os.scandir(rad_directory) as it:
         for entry in it:
@@ -66,9 +60,6 @@ class DataSet(param.Parameterized):
                          },
         }
         return
-    
-    #TODO: allow for snow season selection
-    snowSeas = param.Integer(default=0, bounds=(0, 100))
     
     #for passing to Paramaters
     indexLength = pc_count-1

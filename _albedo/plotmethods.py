@@ -8,10 +8,11 @@ class PlotMethods(rasterproducts.RasterProducts):
     
     @param.depends('run', 'modelComplete',
                    'dateIndex', 'elev', 'azim', 'choose3d')
-    def axes3d(self, figsize=(4,4), topMargin=1, bottomMargin=0):
+    def axes3d(self, figsize=(6,6), topMargin=1.2, bottomMargin=0):
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
         else:
+            plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111, projection='3d')
 
@@ -40,11 +41,12 @@ class PlotMethods(rasterproducts.RasterProducts):
     @param.depends('run', 'modelComplete',
                    'dateIndex', 'resolution', 'sigma', 'vertEx',
                    'timePoint', 'activateMask')
-    def tryptic(self, figsize=(8,4), wspace=0.2, hspace=0, 
+    def tryptic(self, figsize=(12,4), wspace=0.2, hspace=0, 
                 leftMargin=0.05, rightMargin=1, topMargin=1, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
+            plt.close()
             fig = plt.figure(figsize=figsize)
             grid = plt.GridSpec(1, 3, wspace=wspace, hspace=hspace)
 
@@ -79,7 +81,8 @@ class PlotMethods(rasterproducts.RasterProducts):
         else:
             dataframe = self.dataframe
             timePoint = self.timePoint
-
+            
+            plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111, projection='polar')
             ax.set_title('sun position', fontsize=12)
@@ -207,6 +210,7 @@ class PlotMethods(rasterproducts.RasterProducts):
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
         else:
+            plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111)
 
@@ -236,6 +240,7 @@ class PlotMethods(rasterproducts.RasterProducts):
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
         else:
+            plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111)
 

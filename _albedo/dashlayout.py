@@ -24,8 +24,8 @@ class DashLayout(dashtutorial.DashTutorial):
         
         self.dictionary = current_config
         
-        return pn.pane.JSON(current_config, name='JSON', height=182,
-                            width=170, theme='dark', depth=-1)
+        return pn.pane.JSON(current_config, name='JSON',
+                            width=300, theme='dark', depth=-1)
     
     @param.depends('dictionary')
     def reset_run_state(self):
@@ -42,43 +42,23 @@ class DashLayout(dashtutorial.DashTutorial):
         else:
             txt = '####Model complete.'
             at = 'info'
-        return pn.pane.Alert(txt, alert_type=at, width=154, height=95)
+        return pn.pane.Alert(txt, alert_type=at, width=130)
     
     @param.depends('modelComplete')
     def return_run_button(self):
-        args = dict({'width':40, 'height':50, 'name':'',
-            'parameters':['run']})
+        args = dict({'width': 80, 'name':'', 'parameters':['run']})
         enabled = pn.Param(
             self.param, **args, 
-            widgets={'run':{'widget_type': pn.widgets.Checkbox, 'disabled':False},})
+            widgets={'run':
+                     {'widget_type': pn.widgets.Toggle, 'disabled':False},})
         disabled = pn.Param(
             self.param, **args, 
-            widgets={'run':{'widget_type': pn.widgets.Checkbox, 'disabled':True},})
+            widgets={'run':
+                     {'widget_type': pn.widgets.Toggle, 'disabled':True},})
         if self.modelComplete == 'Incomplete':
             return enabled
         elif self.modelComplete == 'Complete':
             return disabled
-    
-    @param.depends('modelComplete')
-    def return_run_accordion(self):
-        if self.modelComplete == 'Incomplete':
-            return pn.pane.Markdown('Plots will load when model is complete.')
-        elif self.modelComplete == 'Complete':
-            self.run_accordion = pn.Tabs(
-                pn.Row('A model-specific tryptic will go here',
-                       name='Rasters',
-                       width=900
-                      ),
-                pn.Column('Model-specific sun pos, M, and horzion plots will go here',
-                          name='Sun Position, Terrain Correction, Horizons',
-                          width=900
-                         ),
-                pn.Column('A model-specific timeseries plot will go here',
-                          name='Time Series Plot',
-                          width=900
-                         ),
-            )
-            return self.run_accordion
     
     def set_layout(self):
         self.function_row = pn.Row(
@@ -87,107 +67,108 @@ class DashLayout(dashtutorial.DashTutorial):
             self.set_m, self.set_masks, self.run_model, self.reset_run_state,
             sizing_mode='scale_both'
         )
-        self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, theme='dark')
+        self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, 
+                                      theme='dark', hover_preview=True)
         
-        self.json_comment = pn.pane.Markdown(
+        self.init_comment = pn.pane.Markdown(
             '''
-            This pane presents init settings for reference. In the
-            future, it can be used to re-init the app with different settings.
+            Immutable model init settings are presented below for reference. 
+            To begin, choose a date from the selector at right.
+            Explore the pointcloud with the view controls. 
+            In the next tab, specify pointcloud rasterization and azimuth bins.
+            '''
+        )
+        self.run_comment = pn.pane.Markdown(
+            '''
+            Current configuration presented below for reference.
+            Press Run to run this config.
+            To adjust config, return to Configure tab. 
+            In the next tab, review results of completed model.
             '''
         )
         self.cap_state = pn.WidgetBox(
             pn.pane.Markdown(
             '''
             The displayed datetime is XXXXX. \n
-            Click here to download a .json object which captures all current state variables.
+            Click here to download a .json object which captures all 
+            current state variables.
             To upload a saved .json object, click here.
             '''
             ), 
             width=350, name='Capture State'
         )
         self.config_accordion = pn.Tabs(
-            pn.Row(self.axes3d, self.tryptic,
-                   name='Pointcloud & Raster Settings',
+            pn.Row(self.tryptic,
+                   name='Raster Settings',
                    width=900
                   ),
             pn.Column(pn.Row(self.polarAxes, self.plotMRaster, self.plotMask),
-                      name='Sun Position, Terrain Correction, Horizons',
+                      name='Terrain Correction Preview',
                       width=900
-                     ),
-            pn.Column(self.timeSeries_Plot,
-                      name='Time Series Plot',
-                      width=900
-                     ),
+                     )
         )
         self.model_tabs = pn.Row(
-            pn.Tabs(pn.Column(self.json_comment, self.json_pane,
-                              name='Initialize'
-                             ),
-                    pn.Column(pn.Row(
-                                pn.Column(
-                                    pn.Row(self.time_control, self.pointcloud_control, self.raster_control),
-                                    pn.Row(self.horizon_control)
-                                ),
-                                pn.Column(self.timeseries_control)),
-                                self.config_accordion,
-                                name='Configure'
-                             ),
+            pn.Tabs(pn.Row(
+                        pn.Column(self.init_comment, self.json_pane),
+                        pn.Column(
+                            pn.Row(self.file_selector, self.pointcloud_control),
+                            self.axes3d
+                        ),
+                        name='Initialize'
+                    ),
                     pn.Column(
-                        pn.Row(pn.Column(pn.Row(self.return_config_pane, 
-                                                pn.Column(
-                                                    pn.Row(self.return_run_button, 
-                                                           pn.Column(pn.Spacer(height=15), self.progress)),
-                                                    self.return_run_alert)
-                                               ),
-                                         pn.Row(self.run_tab_horizon, self.run_tab_time)
-                                        ),
-                               self.run_tab_timeseries_control
-                              ),
-                        self.return_run_accordion,
+                        pn.Row(self.raster_control, self.azi_bins,
+                               self.horizon_preview),
+                        self.config_accordion,
+                        name='Configure'
+                    ),
+                    pn.Column(pn.Row(
+                        pn.Column(self.run_comment, self.return_config_pane),
+                        pn.Column(
+                            pn.Row(self.return_run_button, 
+                                   pn.Column(
+                                       pn.Spacer(height=20),
+                                       self.progress
+                                   )
+                                  ),
+                            self.return_run_alert,
+                            self.run_tab_logs
+                            )
+                        ),
                         name='Run'
                     ),
-                    pn.Row(pn.Spacer(width=10),
-                           name='Analyze'
-                          ),
+                    pn.Column(pn.Row(self.analyze_timepoint, 
+                                     self.timeseries_control
+                                    ),
+                              pn.Tabs(pn.Column(
+                                          self.timeSeries_Plot,
+                                          name='Time Series Plot',
+                                          width=900
+                                          ),
+                                      pn.Column(
+                                          name='Terrain Correction @ Timepoint',
+                                          width=900
+                                      ),
+                                      pn.Column(
+                                          name='Dataframe',
+                                          width=900
+                                      ),
+                              ), 
+                              name='Analyze'
+                    ),
                     pn.Column(self.cap_state,
                               name='Export'
                              ),
-                    active=1
+                    active=0
                    ),
-        )
-        self.tutorial_tabs = pn.Row(
-            pn.Tabs(pn.Column(pn.Spacer(width=10),
-                              name='Initialize'),
-                    pn.Column(pn.Spacer(width=10),
-                              name='Configure'),
-                    pn.Column(pn.Spacer(width=10),
-                              name='Run'),
-                    pn.Column(pn.Spacer(width=10),
-                              name='Analyze'),
-                    pn.Column(pn.Spacer(width=10),
-                              name='Export'),
-                    active=1
-                   )
         )
         
         plt.close()
-        return
-        
-    def set_tabs(self):
-        self.tabs = pn.Tabs(
-            pn.Column(self.model_tabs, 
-                      name = 'Model'),
-            pn.Column(self.tutorial_tabs, 
-                      name = 'Tutorial'),
-            tabs_location='right',
-            sizing_mode='scale_both'
-        )
         return
         
     def dashboard(self):
         self.set_json()
         self.set_controls()
         self.set_layout()
-        self.set_tabs()
         return pn.Column(self.function_row,
-                         self.tabs)
+                         self.model_tabs)
