@@ -1,0 +1,22 @@
+dependencies:
+  - python=3.7.9
+  - pip
+  - pip:
+    - bokeh==2.2.3
+    - holoviews==1.13.5
+    - hvplot==0.6.0
+    - Jinja2==2.10.1
+    - matplotlib==3.3.2
+    - numpy==1.19.0
+    - packaging==20.4
+    - pandas==1.1.3
+    - panel==0.10.1
+    - param==1.10.0
+    - Pillow==8.0.1
+    - pysolar==0.8
+    - python-dateutil==2.7.5
+    - PyYAML==5.3.1
+    - richdem==0.3.4
+    - scipy==1.5.2
+    - tornado==5.1.1
+    - typing-extensions==3.7.4.3
