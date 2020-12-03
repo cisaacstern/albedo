@@ -64,7 +64,7 @@ class DashLayout(dashtutorial.DashTutorial):
         if self.modelComplete == 'Incomplete':
             return pn.pane.Markdown('Plots will load when model is complete.')
         elif self.modelComplete == 'Complete':
-            self.run_accordion = pn.Accordion(
+            self.run_accordion = pn.Tabs(
                 pn.Row('A model-specific tryptic will go here',
                        name='Rasters',
                        width=900
@@ -105,7 +105,7 @@ class DashLayout(dashtutorial.DashTutorial):
             ), 
             width=350, name='Capture State'
         )
-        self.config_accordion = pn.Accordion(
+        self.config_accordion = pn.Tabs(
             pn.Row(self.axes3d, self.tryptic,
                    name='Pointcloud & Raster Settings',
                    width=900
