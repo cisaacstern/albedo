@@ -84,7 +84,8 @@ class DashLayout(dashtutorial.DashTutorial):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
             self.set_axes, self.calc_meanM_list, self.calc_meanAlpha_list,
-            self.set_m, self.set_masks, self.run_model, self.reset_run_state
+            self.set_m, self.set_masks, self.run_model, self.reset_run_state,
+            sizing_mode='scale_both'
         )
         self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, theme='dark')
         
@@ -178,7 +179,8 @@ class DashLayout(dashtutorial.DashTutorial):
                       name = 'Model'),
             pn.Column(self.tutorial_tabs, 
                       name = 'Tutorial'),
-            tabs_location='right'
+            tabs_location='right',
+            sizing_mode='scale_both'
         )
         return
         
@@ -188,5 +190,4 @@ class DashLayout(dashtutorial.DashTutorial):
         self.set_layout()
         self.set_tabs()
         return pn.Column(self.function_row,
-                         self.tabs,
-                         sizing_mode='scale_both')
+                         self.tabs)
