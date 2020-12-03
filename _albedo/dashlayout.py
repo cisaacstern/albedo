@@ -188,4 +188,5 @@ class DashLayout(dashtutorial.DashTutorial):
         self.set_layout()
         self.set_tabs()
         return pn.Column(self.function_row,
-                         self.tabs)
+                         self.tabs,
+                         sizing_mode='scale_both')
