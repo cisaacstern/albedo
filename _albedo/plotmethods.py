@@ -42,7 +42,7 @@ class PlotMethods(rasterproducts.RasterProducts):
                    'date', 'resolution', 'sigma', 'vertEx',
                    'time', 'activateMask')
     def tryptic(self, figsize=(12,5), wspace=0.1, hspace=0, 
-                leftMargin=0.05, rightMargin=1, topMargin=0.8, bottomMargin=0.1):
+                leftMargin=0.05, rightMargin=0.97, topMargin=0.8, bottomMargin=0.1):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
@@ -52,7 +52,8 @@ class PlotMethods(rasterproducts.RasterProducts):
             fig, ax = plt.subplots(1,3, figsize=figsize)
             
             ds = self.date_string
-            titles = [f'{ds}: Elevation', f'{ds}: Slope',f'{ds}: Aspect']
+            titles = [f'{ds}: Elevation', f'{ds}: Slope',
+                      f'{ds}: Aspect (South=0, East +)']
             
             if self.activateMask == 'Overlay':
                 imgs = [self.masked_elev, self.masked_slope, self.masked_aspect]
@@ -64,15 +65,30 @@ class PlotMethods(rasterproducts.RasterProducts):
                           (np.min(self.slopeRast), np.max(self.slopeRast)),
                           (-180, 180)]
             
+            ticks = np.linspace(0, self.resolution-1, 4)
+            xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
+                       str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
+            ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
+                       str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
+            
             ims = []
             for i in range(3):
                 img, cmap = imgs[i], cmaps[i]
                 im = ax[i].imshow(img, origin='lower', cmap=cmap,
                                   vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
                 ims.append(im)
+                ax[i].set_xticks(ticks=ticks)
+                ax[i].set_xticklabels(labels=xlabels)
+                ax[i].set_yticks(ticks=ticks)
+                if i == 0:
+                    ax[i].set_yticklabels(labels=ylabels)
+                    ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
+                else:
+                    ax[i].set_yticklabels(labels=[])
+                if i == 1:
+                    ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
                 ax[i].set_aspect("equal")
 
-            #plt.draw()
             plt.subplots_adjust(left=leftMargin, right=rightMargin,
                                 top=topMargin, bottom=bottomMargin,
                                 wspace=wspace, hspace=hspace)
@@ -81,9 +97,11 @@ class PlotMethods(rasterproducts.RasterProducts):
                 p = ax[i].get_position().get_points().flatten()
                 ax_cbar = fig.add_axes([p[0], 0.88, p[2]-p[0], 0.05])
                 ax_cbar.set_title(titles[i], loc='left')
-                plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+                cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+                if i == 2:
+                    cbar_ticks = [-180, -135, -90, -45, 0, 45, 90, 135, 180]
+                    cb.set_ticks(cbar_ticks)
             
-             
             plt.close()
 
             return fig
