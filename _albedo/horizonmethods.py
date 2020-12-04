@@ -9,7 +9,7 @@ class HorizonMethods(setframe.SetFrame):
         rotates an elevation raster so that North is re-referenced to be
         facing the solar azimuth
         '''
-        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.timePoint]
+        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.time]
         elevGrid = self.elevRast
         rotationAngle = -solarAzimuth
         return ndimage.rotate(elevGrid, rotationAngle, reshape=True, 
@@ -88,7 +88,7 @@ class HorizonMethods(setframe.SetFrame):
         and returns a (TILTED) array of visible points
         '''
         elevG, hSlope_rad = self.slope2horz()
-        solar_altitude = self.dataframe['solarAltitude'].iloc[self.timePoint]
+        solar_altitude = self.dataframe['solarAltitude'].iloc[self.time]
         solar_altitude = np.deg2rad(90 - solar_altitude)
         shape = hSlope_rad.shape
         shadeMask = np.zeros(shape)
@@ -124,7 +124,7 @@ class HorizonMethods(setframe.SetFrame):
         
         rotated_elevG, tiltedMask = self.invisiblePoints()
         dimLength = self.resolution
-        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.timePoint]
+        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.time]
         
         rerotatedMask = ndimage.rotate(tiltedMask, solarAzimuth, 
                                        reshape=True, order=0, mode='constant', cval=np.nan)

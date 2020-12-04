@@ -7,8 +7,8 @@ class DashControls(runmodel.RunModel):
         self.file_selector = pn.WidgetBox(
             pn.Param(self.param, parameters=['date'], 
                      widgets={'date':{'widget_type': pn.widgets.DiscreteSlider, 
-                                      'width': 80}},
-                     width=100, name='File'
+                                      'width': 105}},
+                     width=120, name='File'
                     )
         )
         self.analyze_timepoint = pn.WidgetBox(
@@ -60,9 +60,9 @@ class DashControls(runmodel.RunModel):
                          width=105,
                          name='Preview'
                         ),
-                pn.Param(self.param, parameters=['timePoint'],
-                         widgets={'timePoint':
-                                  {'widget_type': pn.widgets.IntSlider, 
+                pn.Param(self.param, parameters=['time'],
+                         widgets={'time':
+                                  {'widget_type': pn.widgets.DiscreteSlider, 
                                    'width': 80}},
                          width=200,
                          name=''

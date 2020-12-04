@@ -4,16 +4,16 @@ import numpy.ma as ma
 
 class SetMasks(horizonmethods.HorizonMethods):
     
-    @param.depends('date', 'timePoint', 
+    @param.depends('date', 'time', 
                    'resolution', 'sigma', 'vertEx')
     def set_m(self):
         self.m = self.M_calculation(df=self.dataframe, 
-                                    row=self.timePoint,
+                                    row=self.time,
                                     choice='raster'
                                    )
         return
     
-    @param.depends('date', 'timePoint', 
+    @param.depends('date', 'time', 
                    'resolution', 'sigma', 'vertEx')
     def set_masks(self):
         self.mask = self.rerotM_2()

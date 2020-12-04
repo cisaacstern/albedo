@@ -21,20 +21,20 @@ class RunModel(plotmethods.PlotMethods):
             #TODO: self.model_dataframe = self.dataframe ----> statically "snapshot" all this. for downstream speed.
             for index in range(0, col_count):
                 plt.close('all')
-                self.timePoint = index
+                self.time = index
                 img = self.M_calculation(df=self.dataframe, 
                                          row=index,
                                          choice='masked'
                                         )
                 maskedmeanM = np.mean(img)
                 maskedmeanM_list.append(maskedmeanM)
-                self.progress.value = self.timePoint
+                self.progress.value = self.time
             self.maskedmeanM_list = maskedmeanM_list
             #TODO:model_dataframe.insert(maskedmeanM_list, msk_elevRast_List, msk_slopeRast_List, msk_aspectRast_List,
             #                            viz_percent_list)
             #TODO: for list in all these lists: del list
-            self.timePoint = 0
-            #TODO: make a new timePoint parameter: modelTimePoint
+            self.time = 0
+            #TODO: make a new time parameter: modelTimePoint
             #      also make a new horizon mask 'overlay/remove' selector: modelOverlay
             #      also make new Crossselector: modelCrossselector
             #      also make a whole new set of plotter functions, for tryptic, sunpos, M, horizon, and timeseries
@@ -51,7 +51,7 @@ class RunModel(plotmethods.PlotMethods):
             #TODO: OVERAL PICTURE: ISOLATE TABS, no duplicates, take a static snapshot in run, and plot from there.
             #               --> among other things, this means that we don't need to burden the 'Config' tab
             #                    with re-rendering views, if we are moving modelTimePoint to index model data,
-            #                     and not the "global" self.timePoint
+            #                     and not the "global" self.time
             self.modelComplete = 'Complete'
             #TODO:add 'refresh/clear figure' method / garbage collector
             return 

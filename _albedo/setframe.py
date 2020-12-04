@@ -10,7 +10,13 @@ class SetFrame(timeseries.TimeSeries):
     @param.depends('date')
     def set_dataframe(self):
         self.dataframe = self.df_add_Ap()
-        self.param.timePoint.bounds = (0, self.dataframe.shape[0]-1)
+        
+        time_dict = {}
+        for index, time in enumerate(self.dataframe['UTC_datetime'], start=0):
+            time_string = time.strftime("%H:%M:%S")
+            time_dict[time_string] = index
+        #self.param.time.bounds = (0, self.dataframe.shape[0]-1)
+        self.param.time.objects = time_dict
         return
     
     @param.depends('date', 'resolution', 'sigma', 'vertEx')

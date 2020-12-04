@@ -40,7 +40,7 @@ class PlotMethods(rasterproducts.RasterProducts):
     
     @param.depends('run', 'modelComplete',
                    'date', 'resolution', 'sigma', 'vertEx',
-                   'timePoint', 'activateMask')
+                   'time', 'activateMask')
     def tryptic(self, figsize=(12,4), wspace=0.2, hspace=0, 
                 leftMargin=0.05, rightMargin=1, topMargin=1, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
@@ -74,13 +74,13 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete',
-                   'date', 'timePoint')
+                   'date', 'time')
     def polarAxes(self, figsize=(4,4), topMargin=1, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
             dataframe = self.dataframe
-            timePoint = self.timePoint
+            time = self.time
             
             plt.close()
             fig = plt.figure(figsize=figsize)
@@ -104,7 +104,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             xs, ys = np.deg2rad(xs), ys
             ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
 
-            x, y = dataframe['solarAzimuth'].iloc[timePoint], dataframe['solarAltitude'].iloc[timePoint]
+            x, y = dataframe['solarAzimuth'].iloc[self.time], dataframe['solarAltitude'].iloc[self.time]
             x, y = np.deg2rad(x), y
             ax.scatter(x,y, s=500, c='gold',alpha=1)
 
@@ -127,7 +127,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             par1, par2 = self.par1, self.par2
 
             times = self.dataframe['UTC_datetime']
-            timePoint = self.timePoint
+            time = self.time
 
             df = self.dataframe
             vals, keys = [], ['downward looking', 'upward looking diffuse', 
@@ -189,9 +189,9 @@ class PlotMethods(rasterproducts.RasterProducts):
             for par2_val, par2_color in zip(par2_vals, par2_colors):
                 par2.plot(times, par2_val, c=par2_color)
 
-            #vertical timePoint marker
+            #vertical time marker
             #ylims = ax.get_ylim()
-            #ax.vlines(x=times.iloc[timePoint], ymin=0, ymax=ylims[1],
+            #ax.vlines(x=times.iloc[time], ymin=0, ymax=ylims[1],
             #          color='k', linestyles='dotted')
 
             plt.close()
@@ -199,7 +199,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'timePoint', 
+                   'date', 'time', 
                    'resolution', 'sigma', 'vertEx', 'activateMask')
     def plotMRaster(self, colormapRange=(0,2), figsize=(4,4), 
                     topMargin=0.95, bottomMargin=0.05, 
@@ -230,12 +230,12 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
         
     @param.depends('run', 'modelComplete',
-                   'dateIndex', 'timePoint', 'resolution', 'sigma')
+                   'date', 'time', 'resolution', 'sigma')
     def plotMask(self,figsize=(4,4), 
                  topMargin=0.95, bottomMargin=0.05, 
                  leftMargin=0.05, rightMargin=0.95):
         '''
-        plots the direct rad shade mask for the given dateIndex & timePoint
+        plots the direct rad shade mask for the given date & time
         '''
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
