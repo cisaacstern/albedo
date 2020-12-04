@@ -80,7 +80,6 @@ class PlotMethods(rasterproducts.RasterProducts):
             pass
         else:
             dataframe = self.dataframe
-            time = self.time
             
             plt.close()
             fig = plt.figure(figsize=figsize)
@@ -127,7 +126,6 @@ class PlotMethods(rasterproducts.RasterProducts):
             par1, par2 = self.par1, self.par2
 
             times = self.dataframe['UTC_datetime']
-            time = self.time
 
             df = self.dataframe
             vals, keys = [], ['downward looking', 'upward looking diffuse', 
