@@ -65,7 +65,6 @@ class DashControls(runmodel.RunModel):
                      width=530, height=100, name='Select Curves'
                     )
         )
-        
         self.run_tab_logs = pn.WidgetBox(
             pn.Param(self.param, parameters=[], 
                      width=520, height=150, name='Build Log'

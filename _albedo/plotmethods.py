@@ -38,22 +38,21 @@ class PlotMethods(rasterproducts.RasterProducts):
             plt.close()
             return fig
     
-    @param.depends('run', 'modelComplete',
-                   'date', 'resolution', 'sigma', 'vertEx',
-                   'time', 'activateMask')
-    def tryptic(self, figsize=(12,5), wspace=0.1, hspace=0, 
-                leftMargin=0.05, rightMargin=0.97, topMargin=0.8, bottomMargin=0.1):
+    @param.depends('run', 'modelComplete', 'date', 'time', 
+                   'resolution', 'sigma', 'vertEx', 'activateMask')
+    def tryptich(self, figsize=(12,5), wspace=0.05, hspace=0, leftMargin=0.05, 
+                 rightMargin=0.97, topMargin=0.79, bottomMargin=0.1):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
             plt.close()
-            #fig = plt.figure(figsize=figsize)
-            #grid = plt.GridSpec(1, 3, wspace=wspace, hspace=hspace)
             fig, ax = plt.subplots(1,3, figsize=figsize)
             
             ds = self.date_string
-            titles = [f'{ds}: Elevation', f'{ds}: Slope',
-                      f'{ds}: Aspect (South=0, East +)']
+            line2 = f'\nR, S, V ={(self.resolution,self.sigma,self.vertEx)}'
+
+            titles = [f'{ds}: Elevation'+line2, f'{ds}: Slope'+line2,
+                      f'{ds}: Aspect (South=0, East +)'+line2]
             
             if self.activateMask == 'Overlay':
                 imgs = [self.masked_elev, self.masked_slope, self.masked_aspect]
@@ -95,7 +94,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             
             for i in range(3):
                 p = ax[i].get_position().get_points().flatten()
-                ax_cbar = fig.add_axes([p[0], 0.88, p[2]-p[0], 0.05])
+                ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
                 ax_cbar.set_title(titles[i], loc='left')
                 cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
                 if i == 2:
@@ -107,7 +106,8 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete', 'date', 'time')
-    def polarAxes(self, figsize=(4,4), topMargin=0.9, bottomMargin=0):
+    def polarAxes(self, figsize=(3.5,5), topMargin=1, bottomMargin=0,
+                  leftMargin=0.1, rightMargin=0.92):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
@@ -116,7 +116,6 @@ class PlotMethods(rasterproducts.RasterProducts):
             plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111, projection='polar')
-
             ax.set_theta_zero_location('N')
             ax.set_xticks(([np.deg2rad(0), np.deg2rad(45), np.deg2rad(90),
                             np.deg2rad(135), np.deg2rad(180), np.deg2rad(225),
@@ -125,7 +124,6 @@ class PlotMethods(rasterproducts.RasterProducts):
             ax.set_xticklabels(xlbls, rotation="vertical", size=12)
             ax.tick_params(axis='x', pad = 0.5)
             ax.set_theta_direction(-1)
-
             ax.set_rmin(0)
             ax.set_rmax(90)
             ax.set_rlabel_position(90)
@@ -140,18 +138,91 @@ class PlotMethods(rasterproducts.RasterProducts):
             self.dt_str = self.dataframe['MeasDateTime'].iloc[self.time]
             line1=f'{self.dt_str} Sun Position'
             line2=f'Alt, Azi={np.around((x,y),1)}, Bins={self.bins}'
-            ax.set_title(line1+'\n'+line2, loc='left')
             
             x, y = np.deg2rad(x), y
             ax.scatter(x,y, s=500, c='gold',alpha=1)
-
-            plt.subplots_adjust(top=topMargin, bottom=bottomMargin)
+            
+            plt.subplots_adjust(top=topMargin, bottom=bottomMargin,
+                                left=leftMargin, right=rightMargin)
+            
+            p = ax.get_position().get_points().flatten()
+            ax_cbar = fig.add_axes([p[0]+0.085, 0.85, p[2]-p[0], 0.05])
+            ax_cbar.set_title(line1+'\n'+line2, loc='left')
+            ax_cbar.axis('off')
+            
             plt.close()
 
-            return fig 
+            return fig
         
-    @param.depends('run', 'modelComplete',
-                   'date', 'chooseTimeSeries', 
+    @param.depends('run', 'modelComplete', 'date', 'time', 
+                   'resolution', 'sigma', 'vertEx', 'activateMask')
+    def diptych(self, figsize=(8.25,5), topMargin=0.85, bottomMargin=0.05,
+                leftMargin=0.095, rightMargin=0.95, wspace=0.1, hspace=0):
+        '''
+        generates and plots a 'magma' themed M raster and 
+        the direct rad shade mask for the given date & time
+        '''
+        if self.run==True and self.modelComplete == 'Incomplete':
+            pass
+        else:
+            plt.close()
+            fig, ax = plt.subplots(1,2, figsize=figsize)
+            
+            line2 = f'\nR, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
+            title1 = f'{self.dt_str}: Terrain Correction'+line2
+            title2 = f'{self.dt_str}: Current Visibility'+line2
+            titles = [title1, title2]
+            
+            if self.activateMask == 'Overlay':
+                imgs = [self.masked_m, self.mask]
+            elif self.activateMask == 'Remove':
+                imgs = [self.m, self.mask]
+            
+            cmaps = ['magma', 'binary']
+            cmapRanges = [(0,2), (0, 1)]
+            
+            ticks = np.linspace(0, self.resolution-1, 4)
+            xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
+                       str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
+            ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
+                       str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
+            
+            ims = []
+            for i in range(2):
+                img, cmap = imgs[i], cmaps[i]
+                im = ax[i].imshow(img, origin='lower', cmap=cmap,
+                                  vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
+                ims.append(im)
+                ax[i].set_xticks(ticks=ticks)
+                ax[i].set_xticklabels(labels=xlabels)
+                ax[i].set_yticks(ticks=ticks)
+                if i == 0:
+                    ax[i].set_yticklabels(labels=ylabels)
+                    ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
+                else:
+                    ax[i].set_yticklabels(labels=[])
+                if i == 0:
+                    ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
+                ax[i].set_aspect("equal")
+           
+            plt.subplots_adjust(left=leftMargin, right=rightMargin,
+                                    top=topMargin, bottom=bottomMargin,
+                                    wspace=wspace, hspace=hspace)
+
+            for i in range(2):
+                p = ax[i].get_position().get_points().flatten()
+                ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
+                ax_cbar.set_title(titles[i], loc='left')
+                cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+                if i == 1:
+                    cb.set_ticks([0, 1])
+                    cb.set_ticklabels("Visible", "Shaded")
+
+            plt.close()
+
+            return fig
+        
+    @param.depends('run', 'modelComplete', 'date', 'chooseTimeSeries', 
                    'resolution', 'sigma', 'vertEx')
     def timeSeries_Plot(self):
         '''
@@ -233,76 +304,4 @@ class PlotMethods(rasterproducts.RasterProducts):
             plt.close()
 
             return fig
-    
-    @param.depends('run', 'modelComplete',
-                   'date', 'time', 
-                   'resolution', 'sigma', 'vertEx', 'activateMask')
-    def plotMRaster(self, colormapRange=(0,2), figsize=(4,5), 
-                    topMargin=0.8, bottomMargin=0.05, 
-                    leftMargin=0.1, rightMargin=0.95):
-        '''
-        generates and plots a 'magma' themed M raster
-        '''
-        if self.run==True and self.modelComplete == 'Incomplete':
-            pass
-        else:
-            plt.close()
-            fig = plt.figure(figsize=figsize)
-            ax = fig.add_subplot(111)
-
-            if self.activateMask == 'Overlay':
-                img = self.masked_m
-                im = ax.imshow(img, origin='lower', cmap='magma', 
-                               vmin=colormapRange[0], vmax=colormapRange[1])
-            elif self.activateMask == 'Remove':        
-                img = self.m
-                im = ax.imshow(img, origin='lower', cmap='magma', 
-                               vmin=colormapRange[0], vmax=colormapRange[1])
-
-            plt.subplots_adjust(top=topMargin, bottom=bottomMargin, 
-                                left=leftMargin, right=rightMargin)
-            
-            line1 = f'{self.dt_str}: Terrain Correction'
-            line2 = f'R, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
-            
-            p = ax.get_position().get_points().flatten()
-            ax_cbar = fig.add_axes([p[0], 0.83, p[2]-p[0], 0.05])
-            ax_cbar.set_title(line1+'\n'+line2, loc='left')
-            cb = plt.colorbar(im, cax=ax_cbar, orientation='horizontal')
-            
-            plt.close()
-
-            return fig
         
-    @param.depends('run', 'modelComplete',
-                   'date', 'time', 'resolution', 'sigma')
-    def plotMask(self,figsize=(4,5), 
-                 topMargin=0.8, bottomMargin=0.05, 
-                 leftMargin=0.1, rightMargin=0.95):
-        '''
-        plots the direct rad shade mask for the given date & time
-        '''
-        if self.run==True and self.modelComplete == 'Incomplete':
-            pass
-        else:
-            plt.close()
-            fig = plt.figure(figsize=figsize)
-            ax = fig.add_subplot(111)
-
-            img = self.mask
-            im = ax.imshow(img, origin='lower', cmap='binary')
-
-            plt.subplots_adjust(top=topMargin, bottom=bottomMargin, 
-                                left=leftMargin, right=rightMargin)
-            
-            line1 = f'{self.dt_str}: Direct Rad Horizon Viz'
-            line2 = f'R, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
-            
-            p = ax.get_position().get_points().flatten()
-            ax_cbar = fig.add_axes([p[0], 0.83, p[2]-p[0], 0.05])
-            ax_cbar.set_title(line1+'\n'+line2, loc='left')
-            cb = plt.colorbar(im, cax=ax_cbar, orientation='horizontal')
-            
-            plt.close()
-
-            return fig   

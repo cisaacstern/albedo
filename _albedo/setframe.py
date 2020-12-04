@@ -19,15 +19,6 @@ class SetFrame(timeseries.TimeSeries):
             self.time_dict[time_string] = index
         self.param.time.objects = sorted(self.time_dict.values())
         self.param.time.names = self.time_dict
-        self.time_control = pn.WidgetBox(
-            pn.Param(self.param, parameters=['time'],
-                         widgets={'time':
-                                  {'widget_type': pn.widgets.DiscreteSlider, 
-                                   'width': 180}},
-                         width=200,
-                         name='Time'
-                        )
-        )
         return
     
     @param.depends('date', 'resolution', 'sigma', 'vertEx')

@@ -5,6 +5,15 @@ import matplotlib.pyplot as plt
 
 class DashLayout(dashtutorial.DashTutorial):
     
+    @param.depends('date')
+    def return_time_control(self):
+        return pn.WidgetBox(
+            pn.Param(
+                self.param, parameters=['time'],
+                widgets={'time':{'widget_type': pn.widgets.DiscreteSlider, 
+                                 'width': 180}},
+                         width=200, name='Time'))
+    
     @param.depends('date', 'resolution', 'sigma',
                    'vertEx', 'bins')
     def return_config_pane(self):
@@ -87,11 +96,11 @@ class DashLayout(dashtutorial.DashTutorial):
             width=350, name='Capture State'
         )
         self.config_accordion = pn.Tabs(
-            pn.Row(self.tryptic,
+            pn.Row(self.tryptich,
                    name='Raster Settings',
                    width=900
                   ),
-            pn.Column(pn.Row(self.polarAxes, self.plotMRaster, self.plotMask),
+            pn.Column(pn.Row(self.polarAxes, self.diptych),
                       name='Terrain Correction Preview',
                       width=900
                      )
@@ -107,7 +116,7 @@ class DashLayout(dashtutorial.DashTutorial):
                     ),
                     pn.Column(
                         pn.Row(self.raster_control, self.azi_bins,
-                               self.horizon_preview, self.time_control),
+                               self.horizon_preview, self.return_time_control),
                         self.config_accordion,
                         name='Configure'
                     ),
