@@ -59,17 +59,9 @@ class DashControls(runmodel.RunModel):
                                    'inline': False}},
                          width=105,
                          name='Preview'
-                        ),
-                pn.Param(self.param, parameters=['time'],
-                         widgets={'time':
-                                  {'widget_type': pn.widgets.DiscreteSlider, 
-                                   'width': 80}},
-                         width=200,
-                         name=''
                         )
             )
         )
-        
         self.timeseries_control = pn.WidgetBox(
             pn.Param(self.param, parameters=['chooseTimeSeries'], 
                      widgets={'chooseTimeSeries':

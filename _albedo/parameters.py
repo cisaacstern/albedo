@@ -5,8 +5,9 @@ import datetime
 
 class Parameters(dataset.DataSet):
     
-    #timePoint= param.Integer(default=0, bounds=(0, 100))
-    time = param.Selector(default=0, objects=[0])
+    #time = param.Integer(0)
+    #time = param.Integer(default=0, bounds=(0, 100))
+    time = param.Selector(default=0, objects=[0,1])
     
     elev     = param.Integer(default=30, bounds=(0, 90), step=5)
     azim     = param.Integer(default=285, bounds=(0, 360), step=15)

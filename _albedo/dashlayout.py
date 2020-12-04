@@ -64,8 +64,8 @@ class DashLayout(dashtutorial.DashTutorial):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
             self.set_axes, #self.calc_meanM_list, self.calc_meanAlpha_list,
-            self.set_m, self.set_masks, self.run_model, self.reset_run_state,
-            sizing_mode='scale_both'
+            self.set_m, self.set_masks, self.run_model, self.reset_run_state
+            #sizing_mode='scale_both'
         )
         self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, 
                                       theme='dark', hover_preview=True)
@@ -118,7 +118,7 @@ class DashLayout(dashtutorial.DashTutorial):
                     ),
                     pn.Column(
                         pn.Row(self.raster_control, self.azi_bins,
-                               self.horizon_preview),
+                               self.horizon_preview, self.time_control),
                         self.config_accordion,
                         name='Configure'
                     ),

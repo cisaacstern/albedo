@@ -3,20 +3,30 @@ import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import host_subplot
 from mpl_toolkits import axisartist
-
+import panel as pn
+from datetime import timedelta
 
 class SetFrame(timeseries.TimeSeries):
     
     @param.depends('date')
     def set_dataframe(self):
         self.dataframe = self.df_add_Ap()
-        
-        time_dict = {}
-        for index, time in enumerate(self.dataframe['UTC_datetime'], start=0):
-            time_string = time.strftime("%H:%M:%S")
-            time_dict[time_string] = index
-        #self.param.time.bounds = (0, self.dataframe.shape[0]-1)
-        self.param.time.objects = time_dict
+        self.time_dict = {}
+        for index, t in enumerate(self.dataframe['UTC_datetime'], start=0):
+            t = t - timedelta(hours=self.UTC_offset)
+            time_string = t.strftime("%H:%M:%S")
+            self.time_dict[time_string] = index
+        self.param.time.objects = sorted(self.time_dict.values())
+        self.param.time.names = self.time_dict
+        self.time_control = pn.WidgetBox(
+            pn.Param(self.param, parameters=['time'],
+                         widgets={'time':
+                                  {'widget_type': pn.widgets.DiscreteSlider, 
+                                   'width': 80}},
+                         width=200,
+                         name='Time'
+                        )
+        )
         return
     
     @param.depends('date', 'resolution', 'sigma', 'vertEx')
