@@ -107,7 +107,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             return fig
     
     @param.depends('run', 'modelComplete', 'date', 'time')
-    def polarAxes(self, figsize=(4,4), topMargin=1, bottomMargin=0):
+    def polarAxes(self, figsize=(4,4), topMargin=0.9, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
@@ -116,7 +116,6 @@ class PlotMethods(rasterproducts.RasterProducts):
             plt.close()
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(111, projection='polar')
-            ax.set_title('sun position', fontsize=12)
 
             ax.set_theta_zero_location('N')
             ax.set_xticks(([np.deg2rad(0), np.deg2rad(45), np.deg2rad(90),
@@ -135,7 +134,14 @@ class PlotMethods(rasterproducts.RasterProducts):
             xs, ys = np.deg2rad(xs), ys
             ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
 
-            x, y = dataframe['solarAzimuth'].iloc[self.time], dataframe['solarAltitude'].iloc[self.time]
+            x, y = (dataframe['solarAzimuth'].iloc[self.time], 
+                    dataframe['solarAltitude'].iloc[self.time])
+            
+            self.dt_str = self.dataframe['MeasDateTime'].iloc[self.time]
+            line1=f'{self.dt_str} Sun Position'
+            line2=f'Alt, Azi={np.around((x,y),1)}, Bins={self.bins}'
+            ax.set_title(line1+'\n'+line2, loc='left')
+            
             x, y = np.deg2rad(x), y
             ax.scatter(x,y, s=500, c='gold',alpha=1)
 
@@ -231,9 +237,9 @@ class PlotMethods(rasterproducts.RasterProducts):
     @param.depends('run', 'modelComplete',
                    'date', 'time', 
                    'resolution', 'sigma', 'vertEx', 'activateMask')
-    def plotMRaster(self, colormapRange=(0,2), figsize=(4,4), 
-                    topMargin=0.95, bottomMargin=0.05, 
-                    leftMargin=0.05, rightMargin=0.95):
+    def plotMRaster(self, colormapRange=(0,2), figsize=(4,5), 
+                    topMargin=0.8, bottomMargin=0.05, 
+                    leftMargin=0.1, rightMargin=0.95):
         '''
         generates and plots a 'magma' themed M raster
         '''
@@ -246,24 +252,33 @@ class PlotMethods(rasterproducts.RasterProducts):
 
             if self.activateMask == 'Overlay':
                 img = self.masked_m
-                ax.imshow(img, origin='lower', cmap='magma', 
-                          vmin=colormapRange[0], vmax=colormapRange[1])
+                im = ax.imshow(img, origin='lower', cmap='magma', 
+                               vmin=colormapRange[0], vmax=colormapRange[1])
             elif self.activateMask == 'Remove':        
                 img = self.m
-                ax.imshow(img, origin='lower', cmap='magma', 
-                          vmin=colormapRange[0], vmax=colormapRange[1])
+                im = ax.imshow(img, origin='lower', cmap='magma', 
+                               vmin=colormapRange[0], vmax=colormapRange[1])
 
             plt.subplots_adjust(top=topMargin, bottom=bottomMargin, 
                                 left=leftMargin, right=rightMargin)
+            
+            line1 = f'{self.dt_str}: Terrain Correction'
+            line2 = f'R, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
+            
+            p = ax.get_position().get_points().flatten()
+            ax_cbar = fig.add_axes([p[0], 0.83, p[2]-p[0], 0.05])
+            ax_cbar.set_title(line1+'\n'+line2, loc='left')
+            cb = plt.colorbar(im, cax=ax_cbar, orientation='horizontal')
+            
             plt.close()
 
             return fig
         
     @param.depends('run', 'modelComplete',
                    'date', 'time', 'resolution', 'sigma')
-    def plotMask(self,figsize=(4,4), 
-                 topMargin=0.95, bottomMargin=0.05, 
-                 leftMargin=0.05, rightMargin=0.95):
+    def plotMask(self,figsize=(4,5), 
+                 topMargin=0.8, bottomMargin=0.05, 
+                 leftMargin=0.1, rightMargin=0.95):
         '''
         plots the direct rad shade mask for the given date & time
         '''
@@ -275,11 +290,19 @@ class PlotMethods(rasterproducts.RasterProducts):
             ax = fig.add_subplot(111)
 
             img = self.mask
-
-            ax.imshow(img, origin='lower', cmap='binary')
+            im = ax.imshow(img, origin='lower', cmap='binary')
 
             plt.subplots_adjust(top=topMargin, bottom=bottomMargin, 
                                 left=leftMargin, right=rightMargin)
+            
+            line1 = f'{self.dt_str}: Direct Rad Horizon Viz'
+            line2 = f'R, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
+            
+            p = ax.get_position().get_points().flatten()
+            ax_cbar = fig.add_axes([p[0], 0.83, p[2]-p[0], 0.05])
+            ax_cbar.set_title(line1+'\n'+line2, loc='left')
+            cb = plt.colorbar(im, cax=ax_cbar, orientation='horizontal')
+            
             plt.close()
 
             return fig   
