@@ -11,6 +11,7 @@ class SetFrame(timeseries.TimeSeries):
     @param.depends('date')
     def set_dataframe(self):
         self.dataframe = self.df_add_Ap()
+        self.date_string = self.enabledDays[self.date].strftime("%Y-%m-%d")
         self.time_dict = {}
         for index, t in enumerate(self.dataframe['UTC_datetime'], start=0):
             t = t - timedelta(hours=self.UTC_offset)
@@ -22,7 +23,7 @@ class SetFrame(timeseries.TimeSeries):
             pn.Param(self.param, parameters=['time'],
                          widgets={'time':
                                   {'widget_type': pn.widgets.DiscreteSlider, 
-                                   'width': 80}},
+                                   'width': 180}},
                          width=200,
                          name='Time'
                         )

@@ -41,40 +41,54 @@ class PlotMethods(rasterproducts.RasterProducts):
     @param.depends('run', 'modelComplete',
                    'date', 'resolution', 'sigma', 'vertEx',
                    'time', 'activateMask')
-    def tryptic(self, figsize=(12,4), wspace=0.2, hspace=0, 
-                leftMargin=0.05, rightMargin=1, topMargin=1, bottomMargin=0):
+    def tryptic(self, figsize=(12,5), wspace=0.1, hspace=0, 
+                leftMargin=0.05, rightMargin=1, topMargin=0.8, bottomMargin=0.1):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
             plt.close()
-            fig = plt.figure(figsize=figsize)
-            grid = plt.GridSpec(1, 3, wspace=wspace, hspace=hspace)
-
-
+            #fig = plt.figure(figsize=figsize)
+            #grid = plt.GridSpec(1, 3, wspace=wspace, hspace=hspace)
+            fig, ax = plt.subplots(1,3, figsize=figsize)
+            
+            ds = self.date_string
+            titles = [f'{ds}: Elevation', f'{ds}: Slope',f'{ds}: Aspect']
+            
             if self.activateMask == 'Overlay':
                 imgs = [self.masked_elev, self.masked_slope, self.masked_aspect]
             elif self.activateMask == 'Remove':
                 imgs = [self.elevRast, self.slopeRast, self.aspectRast]
-
+            
             cmaps = ['viridis', 'YlOrBr', 'hsv']
             cmapRanges = [(np.min(self.elevRast), np.max(self.elevRast)),
                           (np.min(self.slopeRast), np.max(self.slopeRast)),
                           (-180, 180)]
-
-            for i in range(0,3):
-                ax = fig.add_subplot(grid[0, i])
+            
+            ims = []
+            for i in range(3):
                 img, cmap = imgs[i], cmaps[i]
-                ax.imshow(img, origin='lower', cmap=cmap,
-                          vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
+                im = ax[i].imshow(img, origin='lower', cmap=cmap,
+                                  vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
+                ims.append(im)
+                ax[i].set_aspect("equal")
 
+            #plt.draw()
             plt.subplots_adjust(left=leftMargin, right=rightMargin,
-                                top=topMargin, bottom=bottomMargin) 
+                                top=topMargin, bottom=bottomMargin,
+                                wspace=wspace, hspace=hspace)
+            
+            for i in range(3):
+                p = ax[i].get_position().get_points().flatten()
+                ax_cbar = fig.add_axes([p[0], 0.88, p[2]-p[0], 0.05])
+                ax_cbar.set_title(titles[i], loc='left')
+                plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+            
+             
             plt.close()
 
             return fig
     
-    @param.depends('run', 'modelComplete',
-                   'date', 'time')
+    @param.depends('run', 'modelComplete', 'date', 'time')
     def polarAxes(self, figsize=(4,4), topMargin=1, bottomMargin=0):
         if self.run==True and self.modelComplete=='Incomplete':
             pass

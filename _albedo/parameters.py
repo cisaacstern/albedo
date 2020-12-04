@@ -31,7 +31,7 @@ class Parameters(dataset.DataSet):
                                                   ]
                                          )
     
-    activateMask = param.Selector(objects=['Overlay', 'Remove'])
+    activateMask = param.Selector(default='Remove', objects=['Overlay', 'Remove'])
     bins = param.Integer(default=16, bounds=(8, 64), step=8)
 
     

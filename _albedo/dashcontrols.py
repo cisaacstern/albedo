@@ -11,11 +11,6 @@ class DashControls(runmodel.RunModel):
                      width=120, name='File'
                     )
         )
-        self.analyze_timepoint = pn.WidgetBox(
-            pn.Param(self.param, parameters=[], 
-                     height=70, width=210, name='Model Time'
-                    )
-        )
         self.pointcloud_control = pn.WidgetBox(
             pn.Row(
                 pn.Param(self.param, parameters=['choose3d'], 

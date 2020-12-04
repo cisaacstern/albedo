@@ -11,8 +11,7 @@ class DashLayout(dashtutorial.DashTutorial):
         
         def grab_config():
             config_obj = {
-                'SnowSeason': '18-19',
-                'Date': self.date,
+                'Date': self.date_string,
                 'Raster': {'Resolution': self.resolution,
                            'Sigma': self.sigma,
                            'Vert Exag': self.vertEx},
@@ -33,16 +32,6 @@ class DashLayout(dashtutorial.DashTutorial):
         self.progress.value = 0
         self.modelComplete = 'Incomplete'
         return
-    
-    @param.depends('modelComplete')
-    def return_run_alert(self):
-        if self.modelComplete == 'Incomplete':
-            txt = '####Ready to run.'
-            at = 'warning'
-        else:
-            txt = '####Model complete.'
-            at = 'info'
-        return pn.pane.Alert(txt, alert_type=at, width=130)
     
     @param.depends('modelComplete')
     def return_run_button(self):
@@ -131,13 +120,12 @@ class DashLayout(dashtutorial.DashTutorial):
                                        self.progress
                                    )
                                   ),
-                            self.return_run_alert,
                             self.run_tab_logs
                             )
                         ),
                         name='Run'
                     ),
-                    pn.Column(pn.Row(self.analyze_timepoint, 
+                    pn.Column(pn.Row(#self.time_control.clone(), 
                                      self.timeseries_control
                                     ),
                               pn.Tabs(pn.Column(

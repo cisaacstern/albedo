@@ -10,8 +10,6 @@ class RunModel(plotmethods.PlotMethods):
         if self.run == False:
             pass
         elif self.run == True:
-            #TODO: get return_run_alert to display 'running...'
-            self.return_run_alert()
             #TODO: bin azimuths - generate a slope to horz reference set here
             col_count = self.dataframe.shape[0]
             self.progress.max = col_count-1
