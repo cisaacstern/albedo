@@ -60,13 +60,12 @@ class TimeSeries(griddata.GridData):
         rows for which solar altitude is < 0.
         '''
         df = self.timestamp2UTC()
-        alt_list, azi_list = [], []
-        for i in range(0,df.shape[0]):
-            utcTime = df.iloc[i,1]
-            alt_list.append(90 - solar.get_altitude(self.lat, 
-                                                    self.long, utcTime))
-            azi_list.append(solar.get_azimuth(self.lat,
-                                              self.long, utcTime))
+        
+        alt_list = [90 - solar.get_altitude(self.lat, self.long, utc_time) 
+                    for utc_time in df['UTC_datetime']]
+        
+        azi_list = [solar.get_azimuth(self.lat, self.long, utc_time) 
+                    for utc_time in df['UTC_datetime']]
     
         df.insert(5, 'solarAltitude', alt_list)
         df.insert(6, 'solarAzimuth', azi_list)
@@ -107,9 +106,10 @@ class TimeSeries(griddata.GridData):
         '''
         df = self.sun_position()
         self.p_slope, self.p_aspect = self.planar_slope_aspect()
-        Mp_list = []
-        for row in range(0, df.shape[0]):
-            Mp_list.append(self.M_calculation(df, row, choice='planar'))
+        
+        Mp_list = [self.M_calculation(df, row, choice='planar') 
+                   for row in range(df.shape[0])]
+        
         df.insert(7, 'M_planar', Mp_list)
         return df
     
@@ -135,10 +135,9 @@ class TimeSeries(griddata.GridData):
     def df_add_Ap(self):
         
         df = self.df_add_Mp()
-        Ap_list = []
-        for row in range(0, df.shape[0]):
-            Ap_list.append(self.albedo(df, row, 
-                                       choice = 'planar'))
+        Ap_list = [self.albedo(df, row, choice='planar')
+                   for row in range(df.shape[0])]
+        
         df.insert(8, 'Albedo_planar', Ap_list)
         
         return df   

@@ -17,32 +17,18 @@ class DataSet(param.Parameterized):
     
     #filepath constants
     pointcloud_directory = os.path.join(os.getcwd(), 'data', 'pointclouds')
-    
-    pointclouds = []
-    for file in os.listdir(pointcloud_directory): 
-        pointclouds.append(file)
+    pointclouds = [file for file in os.listdir(pointcloud_directory)]
     pointclouds.sort()
-    pc_count = len(pointclouds)
-    
+
     rad_directory = os.path.join(os.getcwd(), 'data', 'radiometers')
-    radiometers = []
-    with os.scandir(rad_directory) as it:
-        for entry in it:
-            if entry.name.startswith('20') and entry.is_file():
-                radiometers.append(entry.name)
+    radiometers = [file for file in os.listdir(rad_directory)]
     radiometers.sort()
-    rad_count = len(radiometers)
+
+    assert (len(pointclouds)==len(radiometers)), 'Fileset lengths unequal.'
     
-    assert (pc_count==rad_count), 'Fileset lengths unequal.'
-    
-    enabledDays = []
-    for i in range(0, pc_count):
-        enabledDays.append('placeholder')
-    for i in range(0, pc_count):
-        filename = pointclouds[i]
-        year, month, day = int(filename[0:4]), int(filename[4:6]), int(filename[6:8])
-        date = datetime.datetime(year, month, day, 0, 0, 0, 0, tzinfo=datetime.timezone.utc)
-        enabledDays[i] = date
+    enabledDays = [datetime.datetime(
+        int(filename[0:4]), int(filename[4:6]), int(filename[6:8]), 0, 0, 0, 0, 
+        tzinfo=datetime.timezone.utc) for filename in pointclouds]
     
     #TODO: assert a check of enabled days against radiometer dates
     
@@ -62,12 +48,9 @@ class DataSet(param.Parameterized):
         return
     
     #for passing to Paramaters
-    indexLength = pc_count-1
+    indexLength = len(pointclouds)-1 #this is probably not needed
     
-    date_dict = {}
-    for index, date in enumerate(enabledDays, start=0):
-        date_string = date.strftime("%Y-%m-%d")
-        date_dict[date_string] = index
+    date_dict={date.strftime("%Y-%m-%d"):i for i,date in enumerate(enabledDays)}
     
     date = param.Selector(default=0, objects=date_dict)
-    #date = param.Integer(default=0, bounds=(0, indexLength))
+    
