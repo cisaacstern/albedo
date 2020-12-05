@@ -1,10 +1,11 @@
-import _albedo.rasterproducts as rasterproducts
+import _albedo.setframe as setframe
 import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from datetime import timedelta
 
-class PlotMethods(rasterproducts.RasterProducts):
+class PlotMethods(setframe.SetFrame):
     
     @param.depends('run', 'modelComplete',
                    'date', 'elev', 'azim', 'choose3d')
@@ -137,7 +138,7 @@ class PlotMethods(rasterproducts.RasterProducts):
             
             self.dt_str = self.dataframe['MeasDateTime'].iloc[self.time]
             line1=f'{self.dt_str} Sun Position'
-            line2=f'Alt, Azi={np.around((x,y),1)}, Bins={self.bins}'
+            line2=f'Azi, SZA={np.around((x,y),1)}, Bins={self.bins}'
             
             x, y = np.deg2rad(x), y
             ax.scatter(x,y, s=500, c='gold',alpha=1)
@@ -222,21 +223,42 @@ class PlotMethods(rasterproducts.RasterProducts):
 
             return fig
         
-    @param.depends('run', 'modelComplete', 'date', 'chooseTimeSeries', 
-                   'resolution', 'sigma', 'vertEx')
+    @param.depends('modelComplete', 'date', 'chooseTimeSeries')
     def timeSeries_Plot(self):
         '''
         plots a time series, given set of times and a tuple of y's.
         '''
-        if self.run==True and self.modelComplete == 'Incomplete':
-            pass
-        else:
+        if self.modelComplete == 'Incomplete':
+            plt.close()
             fig, ax = self.fig, self.ax
+            title = 'YYYY:MM:DD (sunrise - sunset); R, S, V, Bins= []'
+            ax.set_title(title, loc='left')
+            ax.text(x=-0.04, y=800, s="Current configuration not yet run.", 
+                    fontsize=16)
+            ax.text(x=-0.04, y=600, s="Run model to generate curves.", 
+                    fontsize=30)
+            plt.close()
+            return fig
+        else:
+            plt.close()
+            fig, ax = self.fig, self.ax
+            
+            t_dict = self.param.time.names
+            sunrise_sunset = f'({list(t_dict)[0]}-{list(t_dict)[-1]})'
+            line1 = f'{self.date_string} {sunrise_sunset};'
+            line2 = f' R, S, V, Bins={[self.resolution,self.sigma,self.vertEx,self.bins]}'
+            title = line1+line2
+            ax.set_title(title, loc='left', fontsize=12)
+
             par1, par2 = self.par1, self.par2
 
-            times = self.dataframe['UTC_datetime']
-
             df = self.dataframe
+            times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
+            time_labels = [t.strftime("%H:%M:%S") for t in times] #MY FIRST LIST COMPREHENSION :)
+            time_labels[0] = ''
+            ax.set_xticks(times[::4])
+            ax.set_xticklabels(time_labels[::4])
+            
             vals, keys = [], ['downward looking', 'upward looking diffuse', 
                               'upward looking solar', 'M_planar', 'Albedo_planar']  
             for entry in keys:
@@ -295,12 +317,7 @@ class PlotMethods(rasterproducts.RasterProducts):
                     par2_colors.append(d[series][1])
             for par2_val, par2_color in zip(par2_vals, par2_colors):
                 par2.plot(times, par2_val, c=par2_color)
-
-            #vertical time marker
-            #ylims = ax.get_ylim()
-            #ax.vlines(x=times.iloc[time], ymin=0, ymax=ylims[1],
-            #          color='k', linestyles='dotted')
-
+            
             plt.close()
 
             return fig

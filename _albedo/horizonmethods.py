@@ -1,8 +1,8 @@
-import _albedo.setframe as setframe
+import _albedo.timeseries as timeseries
 from scipy import ndimage
 import numpy as np
 
-class HorizonMethods(setframe.SetFrame):
+class HorizonMethods(timeseries.TimeSeries):
     
     def rotate2azimuth(self):
         '''

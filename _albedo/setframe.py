@@ -1,12 +1,13 @@
-import _albedo.timeseries as timeseries
+import _albedo.horizonmethods as horizonmethods
 import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import host_subplot
 from mpl_toolkits import axisartist
 import panel as pn
 from datetime import timedelta
+import numpy.ma as ma
 
-class SetFrame(timeseries.TimeSeries):
+class SetFrame(horizonmethods.HorizonMethods):
     
     @param.depends('date')
     def set_dataframe(self):
@@ -26,7 +27,7 @@ class SetFrame(timeseries.TimeSeries):
         self.elevRast, self.slopeRast, self.aspectRast = self.griddata_transforms()
         return
     
-    def set_axes(self, figsize=(15,4), topMargin=0.95, 
+    def set_axes(self, figsize=(15,4), topMargin=0.9, 
                  bottomMargin=0.1, leftMargin=0.05, rightMargin=0.745):
         '''
         instantiates the axes for the timeSeries_Plot.
@@ -60,4 +61,21 @@ class SetFrame(timeseries.TimeSeries):
         
         self.fig, self.ax = fig, ax
         self.par1, self.par2 = par1, par2
+        return
+    
+    @param.depends('date', 'time', 'resolution', 'sigma', 'vertEx')
+    def set_m(self):
+        self.m = self.M_calculation(df=self.dataframe, 
+                                    row=self.time,
+                                    choice='raster'
+                                   )
+        return
+    
+    @param.depends('date', 'time', 'resolution', 'sigma', 'vertEx')
+    def set_masks(self):
+        self.mask = self.rerotM_2()
+        self.masked_elev = ma.masked_where(self.mask == 1, self.elevRast)
+        self.masked_slope = ma.masked_where(self.mask == 1, self.slopeRast)
+        self.masked_aspect = ma.masked_where(self.mask == 1, self.aspectRast)
+        self.masked_m = ma.masked_where(self.mask == 1, self.m)
         return

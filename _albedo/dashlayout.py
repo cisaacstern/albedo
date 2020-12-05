@@ -1,9 +1,9 @@
-import _albedo.dashtutorial as dashtutorial
+import _albedo.dashcontrols as dashcontrols
 import param
 import panel as pn
 import matplotlib.pyplot as plt
 
-class DashLayout(dashtutorial.DashTutorial):
+class DashLayout(dashcontrols.DashControls):
     
     @param.depends('date')
     def return_time_control(self):
@@ -14,8 +14,7 @@ class DashLayout(dashtutorial.DashTutorial):
                                  'width': 180}},
                          width=200, name='Time'))
     
-    @param.depends('date', 'resolution', 'sigma',
-                   'vertEx', 'bins')
+    @param.depends('date', 'resolution', 'sigma', 'vertEx', 'bins')
     def return_config_pane(self):
         
         def grab_config():
