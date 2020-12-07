@@ -247,7 +247,7 @@ class PlotMethods(setframe.SetFrame):
             plt.close()
             #figure and three axes
             fig, ax_rad = self.fig, self.ax
-            ax_m, ax_alpha = self.par1, self.par2
+            ax_m, ax_alpha, ax_viz = self.par1, self.par2, self.par3
             
             #setting up the plot title
             t_dict = self.param.time.names
@@ -273,29 +273,30 @@ class PlotMethods(setframe.SetFrame):
                 tuple(df[next(col for col in cols if col.startswith('upward looking solar'))] 
                       - df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
                 tuple(df['M_planar']),
-                tuple(df['Albedo_planar'])
+                tuple(df['Albedo_planar']),
+                tuple(df['raster_meanM']),
+                tuple(df['raster_meanALPHA']),
+                tuple(df['maskedmeanM']),
+                tuple(df['maskedAlbedo']),
+                tuple(df['viz_percent'])
             ]
             #variable assignment
-            globalup, diffusedwn, directdwn, M_planar, Albedo_planar = vals    
-            #directdwn = directdwn - diffusedwn
-            #meanM = self.meanM_list
-            #maskedmeanM = self.maskedmeanM_list
-            #meanAlpha = self.meanAlpha_list
-            #planarIDR = M_planar*directdwn
-            #IDR_Recon_RasterMean = meanM*downDirect
-            #TODO: radRecon_maskedmeanM = maskedmeanM*downDirect
+            (globalup, diffusedwn, directdwn, M_planar, Albedo_planar, 
+             raster_meanM, raster_meanALPHA, maskedmeanM, maskedAlbedo, 
+             viz_percent) = vals    
             
             #measurements
             m = {
-                'Global Up': [globalup, 'salmon'],
-                'Direct Dwn': [directdwn, 'orange'],
+                'Global Up': [globalup, 'orange'],
+                'Direct Dwn': [directdwn, 'salmon'],
                 'Diffuse Dwn': [diffusedwn, 'peachpuff']
             }
             
             #products
-            p = {'M':[M_planar,'blue'],'Alpha':[Albedo_planar,'red'],'IDR':['planarIDR','green']}
-            r = {'M':["rM_data",'dblue'],'Alpha':["rAlpha_data",'dred'],'IDR':["rIDR_data",'dgreen']}
-            h = {'M':["hM_data",'ddblue'],'Alpha':["hAlpha_data",'ddred'],'IDR':["hIDR_data",'ddgreen']}
+            p = {'M':[M_planar,'solid'],     'Alpha':[Albedo_planar,'solid'],    'IDR':['planarIDR','green']}
+            r = {'M':[raster_meanM,'dashed'],'Alpha':[raster_meanALPHA,'dashed'],'IDR':["rIDR_data",'dgreen']}
+            h = {'M':[maskedmeanM,'dotted'],'Alpha':[maskedAlbedo,'dotted'],   'IDR':["hIDR_data",'ddgreen']}
+            v = {'v':[viz_percent, 'k']}
 
             #unification
             plot = {
@@ -306,17 +307,22 @@ class PlotMethods(setframe.SetFrame):
                 **{r[pick][0]:[r[pick][1], pick] 
                    for pick in self.set_raster_curves},
                 **{h[pick][0]:[h[pick][1], pick] 
-                   for pick in self.set_horizon_curves}
+                   for pick in self.set_horizon_curves},
+                **{v['v'][0]:[v['v'][1], 'viz']}
             } 
-                        
+                                    
             #plot
             for data, metadata in zip(plot.keys(), plot.values()):
+                ax_rad.plot(times, np.zeros((len(times))), alpha=0) #time4host
                 if metadata[1] in ('raw', 'IDR'):
                     ax_rad.plot(times, data, c=metadata[0])
                 elif metadata[1] == 'M':
-                    ax_m.plot(times, data, c=metadata[0])
+                    ax_m.plot(times, data, ls=metadata[0], c='mediumorchid')
                 elif metadata[1] == 'Alpha':
-                    ax_alpha.plot(times, data, c=metadata[0])
+                    ax_alpha.plot(times, data, ls=metadata[0], c='darkturquoise')
+                elif metadata[1] == 'viz':
+                    if self.set_visibile_curve:
+                        ax_viz.plot(times, data, c=metadata[0], alpha=0.5)
                 else:
                     raise KeyError('Plot data|metadata error.')
                     

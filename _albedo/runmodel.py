@@ -22,6 +22,8 @@ class RunModel(plotmethods.PlotMethods):
                 c = df['M_planar'].iloc[row]
             elif choice == 'raster':
                 c = df['raster_meanM'].iloc[row]
+            elif choice == 'masked':
+                c = df['maskedmeanM'].iloc[row]
 
             return D_up/((c*B_down)+D_down)
         
@@ -32,9 +34,15 @@ class RunModel(plotmethods.PlotMethods):
         elif self.run == True:
             start_t = time.time()
             #TODO: bin azimuths - generate a slope to horz reference set here
-            self.log += '\nModel queued with config '+str(self.dictionary)
-
+            
+            k, v = list(self.dictionary.keys()), list(self.dictionary.values())
+            self.log += f"""\nModel queued with config:
+            {k[0]}: {v[0]}
+            {k[1]}: {v[1]}
+            {k[2]}: {v[2]}
+            """
             #runnnn!
+            plt.close('all')                
             df = self.dataframe.copy(deep=True)
             ncols = self.dataframe.shape[0]
             self.progress.max = ncols-1
@@ -63,33 +71,62 @@ class RunModel(plotmethods.PlotMethods):
             #RASTER_mean_ALPHA
             meanAlpha_list = [
                 self.albedo(df, row, choice = 'raster') 
-                for row in range(df.shape[0])
+                for row in range(ncols)
             ]
-            df.insert(10, 'raster_meanALPHA', meanM_list)
-            self.log += '\nAdded raster M and albedo to dataframe'
-            
-            maskedmeanM_list = []
-            #TODO: viz_percent_list = []
-            for index in range(0, ncols):
-                plt.close('all')
-                self.time = index
-                img = self.M_calculation(df=self.dataframe, 
-                                         row=index,
-                                         choice='masked'
-                                        )
-                maskedmeanM = np.mean(img)
-                maskedmeanM_list.append(maskedmeanM)
-                self.progress.value = self.time
-            self.maskedmeanM_list = maskedmeanM_list
-            #TODO:model_dataframe.insert(maskedmeanM_list, msk_elevRast_List, msk_slopeRast_List, msk_aspectRast_List,
-            #                            viz_percent_list)
-            #TODO: for list in all these lists: del list
-            self.log += '\nAdded horizon M and albedo to dataframe'
+            df.insert(10, 'raster_meanALPHA', meanAlpha_list)
+            self.log += """\nAdded raster M and albedo to dataframe
+            Running horizon model...
+            """
 
+            maskedmeanM_list, viz_percent_list = [], []
+            for index in range(ncols):
+                plt.close('all')
+                #trigger new raster set
+                #  NOTE: I believe this cannot be easily converted
+                #        to list comprehensions, given that it req-
+                #        uires triggering this 'cascade' of state 
+                #        rasters by indexing self.time parameter.
+                self.time = index
+                #calculate viz %
+                unique, counts = np.unique(self.mask, return_counts=True)
+                d = dict(zip(unique, counts))
+                if 1.0 in d.keys():
+                    vp = 1-(d[1.0]/(self.resolution**2)) #1.0 assigned to in-viz pts
+                else:
+                    vp = 1
+                viz_percent_list.append(vp)
+                #calc masked M
+                m = self.M_calculation(df, row=index, choice='masked')
+                maskedmeanM = np.mean(m)
+                maskedmeanM_list.append(maskedmeanM)
+                #update progress bar
+                self.progress.value = self.time
+                
+            df.insert(11, 'maskedmeanM', maskedmeanM_list)
+            
+            maskedAlbedo_list = [
+                self.albedo(df, row, choice = 'masked')
+                for row in range(ncols)
+            ]
+            df.insert(12, 'maskedAlbedo', maskedAlbedo_list)
+            
+            viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
+            
+            df.insert(13, 'viz_percent', viz_percent_list)
+            
+            del (Mp_list, Ap_list, meanM_list, meanAlpha_list, 
+                 maskedmeanM_list, maskedAlbedo_list, viz_percent_list)
+
+            self.log+='\nAdded horizon M, horizon albedo, and viz% to dataframe'
             self.time = 0
             self.model_dataframe = df
             end_t = time.time()
-            self.log += f'\nModel completed in {np.around(end_t-start_t, 4)}s.'
+            run_t = np.around(end_t-start_t, 4)
+            cell_t, ar_cs = np.around(run_t/ncols, 4), self.resolution**2
+            self.log+=f"""<pre style="color:lime">\nModel completed in {run_t}s.
+            {cell_t}s/timepoint for array of {ar_cs} cells @ {ncols} timepoints.
+            </pre>
+            """
             self.modelComplete = 'Complete'
             return 
         

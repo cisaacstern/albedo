@@ -38,11 +38,13 @@ class DashLayout(dashcontrols.DashControls):
     def return_log_pane(self):
         return pn.pane.HTML(
         f"""
+        <div id=""style="overflow-y:scroll; height:400px;">
         <pre style="color:white; font-size:12px">Build Log</pre>
-        <pre style="color:aquamarine; font-size:12px">{self.log}</pre>
+        <pre style="color:deepskyblue; font-size:12px">{self.log}</pre>
+        </div>
         """,
         style={'background-color':'#000000', 'border':'2px solid black',
-               'border-radius': '5px', 'padding': '10px','width':'600px'}
+               'border-radius': '5px', 'padding': '10px','width':'560px'}
     )
     
     @param.depends('modelComplete')
@@ -57,7 +59,9 @@ class DashLayout(dashcontrols.DashControls):
     def reset_run_state(self):
         self.run = False
         self.progress.value = 0
-        self.modelComplete = 'Incomplete'
+        if self.modelComplete == 'Complete':
+            self.modelComplete = 'Incomplete'
+            del self.model_dataframe
         return
     
     @param.depends('modelComplete')
