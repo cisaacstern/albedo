@@ -2,50 +2,75 @@ import _albedo.plotmethods as plotmethods
 import param
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 class RunModel(plotmethods.PlotMethods):
-    
+      
+    def albedo(self, df, row, choice):
+            '''
+            '''
+            for col in df.columns:
+                if col.startswith('downward looking'):
+                    D_up = df[col].iloc[row]
+                if col.startswith('upward looking diffuse'):
+                    D_down = df[col].iloc[row]
+                if col.startswith('upward looking solar'):
+                    B_down = df[col].iloc[row]
+            B_down = B_down - D_down
+
+            if choice == 'planar':
+                c = df['M_planar'].iloc[row]
+            elif choice == 'raster':
+                c = df['raster_meanM'].iloc[row]
+
+            return D_up/((c*B_down)+D_down)
+        
     @param.depends('run')
     def run_model(self): #formerly, calc_maskedmeanM_list
         if self.run == False:
             pass
         elif self.run == True:
-            '''
-            @param.depends('dateIndex', 'resolution', 'sigma')
-            def calc_meanM_list(self):
-                col_count = self.dataframe.shape[0]
-                meanM_list = []
-                for row in range(0, col_count):
-                    img = self.M_calculation(df=self.dataframe, 
-                                             row=row,
-                                             choice='raster'
-                                            )
-                    meanM = np.mean(img)
-                    meanM_list.append(meanM)
-                    self.meanM_list = meanM_list
-                return 
-
-            @param.depends('dateIndex', 'resolution', 'sigma',
-                           'vertEx')
-            def calc_meanAlpha_list(self):
-                df = self.dataframe
-                meanAlpha_list = []
-                for row in range(0, df.shape[0]):
-                    meanAlpha_list.append(self.albedo(df, row, 
-                                                      choice = 'raster'))
-                    self.meanAlpha_list = meanAlpha_list
-                return
-            '''
-
-            
+            start_t = time.time()
             #TODO: bin azimuths - generate a slope to horz reference set here
-            col_count = self.dataframe.shape[0]
-            self.progress.max = col_count-1
+            self.log += '\nModel queued with config '+str(self.dictionary)
+
+            #runnnn!
+            df = self.dataframe.copy(deep=True)
+            ncols = self.dataframe.shape[0]
+            self.progress.max = ncols-1
+            self.log += '\nCopied dataframe'
+            
+            #PLANAR M
+            self.p_slope, self.p_aspect = self.planar_slope_aspect()
+            Mp_list = [self.M_calculation(df, row, choice='planar') 
+                       for row in range(ncols)]
+            df.insert(7, 'M_planar', Mp_list)
+
+            #PLANAR ALBEDO
+            Ap_list = [self.albedo(df, row, choice='planar')
+                       for row in range(ncols)]
+            df.insert(8, 'Albedo_planar', Ap_list)
+            self.log += '\nAdded planar M and albedo to dataframe'
+
+            #RASTER meanM
+            meanM_list = [
+                np.mean(
+                    self.M_calculation(df=df, row=row, choice='raster')
+                ) for row in range(ncols)
+            ]
+            df.insert(9, 'raster_meanM', meanM_list)
+
+            #RASTER_mean_ALPHA
+            meanAlpha_list = [
+                self.albedo(df, row, choice = 'raster') 
+                for row in range(df.shape[0])
+            ]
+            df.insert(10, 'raster_meanALPHA', meanM_list)
+            self.log += '\nAdded raster M and albedo to dataframe'
+            
             maskedmeanM_list = []
-            #TODO: msk_elevRast_List, msk_slopeRast_List, msk_aspectRast_List = [], [], []
             #TODO: viz_percent_list = []
-            #TODO: self.model_dataframe = self.dataframe ----> statically "snapshot" all this. for downstream speed.
-            for index in range(0, col_count):
+            for index in range(0, ncols):
                 plt.close('all')
                 self.time = index
                 img = self.M_calculation(df=self.dataframe, 
@@ -59,30 +84,16 @@ class RunModel(plotmethods.PlotMethods):
             #TODO:model_dataframe.insert(maskedmeanM_list, msk_elevRast_List, msk_slopeRast_List, msk_aspectRast_List,
             #                            viz_percent_list)
             #TODO: for list in all these lists: del list
+            self.log += '\nAdded horizon M and albedo to dataframe'
+
             self.time = 0
-            #TODO: make a new time parameter: modelTimePoint
-            #      also make a new horizon mask 'overlay/remove' selector: modelOverlay
-            #      also make new Crossselector: modelCrossselector
-            #      also make a whole new set of plotter functions, for tryptic, sunpos, M, horizon, and timeseries
-            #      ---> use these new plotters, in class ModelPlots(), to plot directly from the assembled dataframe
-            #      ---> it may be a good idea to drop the dataframe in storage, and then call it generatively based on
-            #           the index of modelTimePoint.
-            #           ----> this may be the first viable opportunity i have to use a generator, 
-            #                 given that the indexing will now be only
-            #TODO: by having NO DUPLICATE panes between config and run tabs,
-            #       --> we may get a real speedup
-            #TODO: add 'DATAFRAME' accordion to run_accordions
-            #       ---> but size of dataframe may mean this is only a partial, or generative view
-            #       ----> serves as a reference for upcoming download feature
-            #TODO: OVERAL PICTURE: ISOLATE TABS, no duplicates, take a static snapshot in run, and plot from there.
-            #               --> among other things, this means that we don't need to burden the 'Config' tab
-            #                    with re-rendering views, if we are moving modelTimePoint to index model data,
-            #                     and not the "global" self.time
+            self.model_dataframe = df
+            end_t = time.time()
+            self.log += f'\nModel completed in {np.around(end_t-start_t, 4)}s.'
             self.modelComplete = 'Complete'
-            #TODO:add 'refresh/clear figure' method / garbage collector
             return 
         
-    @param.depends('fill_True')
+    @param.depends('set_curve_filler')
     def fill_between(self):
         '''
         fills between selected curves

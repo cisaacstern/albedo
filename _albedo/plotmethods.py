@@ -21,12 +21,14 @@ class PlotMethods(setframe.SetFrame):
                 if 'Pointcloud' in self.choose3d:
                     xyz = self.datetime2xyz()
                     Easting, Northing, Elevation = xyz[:,0], xyz[:,1], xyz[:,2]
-                    ax.scatter(Easting, Northing, Elevation, cmap='viridis', c=Elevation)
+                    ax.scatter(Easting, Northing, Elevation,
+                               cmap='viridis', c=Elevation)
 
                 if 'Planar Fit' in self.choose3d:
                     XYZ = self.pFit()
                     X, Y, Z = XYZ[:,:,0], XYZ[:,:,1], XYZ[:,:,2]
-                    ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.5)
+                    ax.plot_surface(X, Y, Z, color='r', 
+                                    rstride=1, cstride=1, alpha=0.5)
 
             ax.view_init(elev=self.elev, azim=self.azim)
             ax.set_xlim(320977, 320980)
@@ -223,7 +225,9 @@ class PlotMethods(setframe.SetFrame):
 
             return fig
         
-    @param.depends('modelComplete', 'date', 'chooseTimeSeries')
+    @param.depends('modelComplete', 'date', 'set_measurements', 
+                   'set_planar_curves', 'set_raster_curves', 
+                   'set_horizon_curves', 'set_visibile_curve')
     def timeSeries_Plot(self):
         '''
         plots a time series, given set of times and a tuple of y's.
@@ -241,83 +245,81 @@ class PlotMethods(setframe.SetFrame):
             return fig
         else:
             plt.close()
-            fig, ax = self.fig, self.ax
+            #figure and three axes
+            fig, ax_rad = self.fig, self.ax
+            ax_m, ax_alpha = self.par1, self.par2
             
+            #setting up the plot title
             t_dict = self.param.time.names
             sunrise_sunset = f'({list(t_dict)[0]}-{list(t_dict)[-1]})'
             line1 = f'{self.date_string} {sunrise_sunset};'
             line2 = f' R, S, V, Bins={[self.resolution,self.sigma,self.vertEx,self.bins]}'
             title = line1+line2
-            ax.set_title(title, loc='left', fontsize=12)
-
-            par1, par2 = self.par1, self.par2
-
-            df = self.dataframe
-            times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
-            time_labels = [t.strftime("%H:%M:%S") for t in times] #MY FIRST LIST COMPREHENSION :)
-            time_labels[0] = ''
-            ax.set_xticks(times[::4])
-            ax.set_xticklabels(time_labels[::4])
+            ax_rad.set_title(title, loc='left', fontsize=12)
             
-            vals, keys = [], ['downward looking', 'upward looking diffuse', 
-                              'upward looking solar', 'M_planar', 'Albedo_planar']  
-            for entry in keys:
-                for col in df.columns:
-                    if col.startswith(entry):
-                        vals.append(df[col])            
-            upGlobal, downDiffuse, downDirect, M_planar, Albedo_planar = vals    
-            downDirect = downDirect - downDiffuse
-
+            #x-axis vals (in UTC) & labels (in PT)
+            df = self.model_dataframe
+            times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
+            time_labels = [t.strftime("%H:%M:%S") for t in times]
+            time_labels[0] = ''
+            ax_rad.set_xticks(times[::4])
+            ax_rad.set_xticklabels(time_labels[::4])
+            
+            #assigning curve values
+            cols = df.columns
+            vals = [
+                tuple(df[next(col for col in cols if col.startswith('downward looking'))]),
+                tuple(df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
+                tuple(df[next(col for col in cols if col.startswith('upward looking solar'))] 
+                      - df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
+                tuple(df['M_planar']),
+                tuple(df['Albedo_planar'])
+            ]
+            #variable assignment
+            globalup, diffusedwn, directdwn, M_planar, Albedo_planar = vals    
+            #directdwn = directdwn - diffusedwn
             #meanM = self.meanM_list
             #maskedmeanM = self.maskedmeanM_list
-
             #meanAlpha = self.meanAlpha_list
-
-            IDR_Recon_Planar = M_planar*downDirect
+            #planarIDR = M_planar*directdwn
             #IDR_Recon_RasterMean = meanM*downDirect
             #TODO: radRecon_maskedmeanM = maskedmeanM*downDirect
-
-            d = {'Rad_Meas: Global Up': [upGlobal, 'salmon'], 
-                'Rad_Meas: Direct Down': [downDirect, 'orange'], 
-                'Rad_Meas: Diffuse Down': [downDiffuse, 'peachpuff'],
-                'M: Planar': [M_planar, 'mediumorchid'],
-                #'M: Raster Mean': [meanM, 'indigo'], 
-                #'M: Horizon Mean' : [maskedmeanM, 'green'],
-                'Alpha: Planar': [Albedo_planar, 'darkturquoise'],
-                #'Alpha: Raster Mean': [meanAlpha, 'darkcyan'],
-                #'Albedo: Horizon Mean': [maskedmeanAlpha, 'orange'], 
-                'IDR_Recon: Planar': [IDR_Recon_Planar, 'orange'], 
-                #'IDR_Recon: Raster Mean': [IDR_Recon_RasterMean, 'red']#,
-                #'Mean Raster M (Masked) Direct' 
-                }
-
-            #raw measurements
-            ax_vals, ax_colors = [], []
-            for series in self.chooseTimeSeries:
-                if series.startswith('Rad') or series.startswith('IDR'):
-                    ax_vals.append(d[series][0])
-                    ax_colors.append(d[series][1])
-            for ax_val, ax_color in zip(ax_vals, ax_colors):
-                ax.plot(times, ax_val, c=ax_color)
-
-            #terrain correction values
-            par1_vals, par1_colors = [], []
-            for series in self.chooseTimeSeries:
-                if series.startswith('M'):
-                    par1_vals.append(d[series][0])
-                    par1_colors.append(d[series][1])
-            for par1_val, par1_color in zip(par1_vals, par1_colors):
-                par1.plot(times, par1_val, c=par1_color, alpha=0.6)
-
-            #albedoes
-            par2_vals, par2_colors = [], []
-            for series in self.chooseTimeSeries:
-                if series.startswith('Alpha'):
-                    par2_vals.append(d[series][0])
-                    par2_colors.append(d[series][1])
-            for par2_val, par2_color in zip(par2_vals, par2_colors):
-                par2.plot(times, par2_val, c=par2_color)
             
+            #measurements
+            m = {
+                'Global Up': [globalup, 'salmon'],
+                'Direct Dwn': [directdwn, 'orange'],
+                'Diffuse Dwn': [diffusedwn, 'peachpuff']
+            }
+            
+            #products
+            p = {'M':[M_planar,'blue'],'Alpha':[Albedo_planar,'red'],'IDR':['planarIDR','green']}
+            r = {'M':["rM_data",'dblue'],'Alpha':["rAlpha_data",'dred'],'IDR':["rIDR_data",'dgreen']}
+            h = {'M':["hM_data",'ddblue'],'Alpha':["hAlpha_data",'ddred'],'IDR':["hIDR_data",'ddgreen']}
+
+            #unification
+            plot = {
+                **{m[pick][0]:[m[pick][1],'raw'] 
+                   for pick in self.set_measurements},
+                **{p[pick][0]:[p[pick][1], pick] 
+                   for pick in self.set_planar_curves},
+                **{r[pick][0]:[r[pick][1], pick] 
+                   for pick in self.set_raster_curves},
+                **{h[pick][0]:[h[pick][1], pick] 
+                   for pick in self.set_horizon_curves}
+            } 
+                        
+            #plot
+            for data, metadata in zip(plot.keys(), plot.values()):
+                if metadata[1] in ('raw', 'IDR'):
+                    ax_rad.plot(times, data, c=metadata[0])
+                elif metadata[1] == 'M':
+                    ax_m.plot(times, data, c=metadata[0])
+                elif metadata[1] == 'Alpha':
+                    ax_alpha.plot(times, data, c=metadata[0])
+                else:
+                    raise KeyError('Plot data|metadata error.')
+                    
             plt.close()
 
             return fig

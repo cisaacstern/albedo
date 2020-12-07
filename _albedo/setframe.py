@@ -11,13 +11,21 @@ class SetFrame(horizonmethods.HorizonMethods):
     
     @param.depends('date')
     def set_dataframe(self):
-        self.dataframe = self.df_add_Ap()
+        self.dataframe = self.sun_position()
         self.date_string = self.enabledDays[self.date].strftime("%Y-%m-%d")
+        
+        self.time_dict = {
+            (t-timedelta(hours=self.UTC_offset)).strftime("%H:%M:%S"):index
+            for index, t in enumerate(self.dataframe['UTC_datetime'])
+        }
+        
+        '''
         self.time_dict = {}
         for index, t in enumerate(self.dataframe['UTC_datetime'], start=0):
             t = t - timedelta(hours=self.UTC_offset)
             time_string = t.strftime("%H:%M:%S")
             self.time_dict[time_string] = index
+        '''
         self.param.time.objects = sorted(self.time_dict.values())
         self.param.time.names = self.time_dict
         return

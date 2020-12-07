@@ -34,6 +34,25 @@ class DashLayout(dashcontrols.DashControls):
         return pn.pane.JSON(current_config, name='JSON',
                             width=300, theme='dark', depth=-1)
     
+    @param.depends('log')
+    def return_log_pane(self):
+        return pn.pane.HTML(
+        f"""
+        <pre style="color:white; font-size:12px">Build Log</pre>
+        <pre style="color:aquamarine; font-size:12px">{self.log}</pre>
+        """,
+        style={'background-color':'#000000', 'border':'2px solid black',
+               'border-radius': '5px', 'padding': '10px','width':'600px'}
+    )
+    
+    @param.depends('modelComplete')
+    def return_model_df(self):
+        if self.modelComplete == 'Incomplete':
+            return pn.Row('Run model to generate dataframe.')
+        else:
+            return pn.pane.DataFrame(self.model_dataframe, 
+                                     max_rows=4, max_cols=7, width=900)
+    
     @param.depends('dictionary')
     def reset_run_state(self):
         self.run = False
@@ -62,7 +81,6 @@ class DashLayout(dashcontrols.DashControls):
             self.set_filename, self.set_dataframe, self.set_raster,
             self.set_axes, #self.calc_meanM_list, self.calc_meanAlpha_list,
             self.set_m, self.set_masks, self.run_model, self.reset_run_state
-            #sizing_mode='scale_both'
         )
         self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, 
                                       theme='dark', hover_preview=True)
@@ -128,7 +146,7 @@ class DashLayout(dashcontrols.DashControls):
                                        self.progress
                                    )
                                   ),
-                            self.run_tab_logs
+                            self.return_log_pane
                             )
                         ),
                         name='Run'
@@ -142,12 +160,8 @@ class DashLayout(dashcontrols.DashControls):
                                           width=900
                                           ),
                                       pn.Column(
-                                          name='Terrain Correction @ Timepoint',
-                                          width=900
-                                      ),
-                                      pn.Column(
-                                          name='Dataframe',
-                                          width=900
+                                          self.return_model_df,
+                                          name='Dataframe'
                                       ),
                               ), 
                               name='Analyze'

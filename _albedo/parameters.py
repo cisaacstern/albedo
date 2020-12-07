@@ -17,30 +17,32 @@ class Parameters(dataset.DataSet):
     sigma      = param.Number(0.5, bounds=(0, 3))
     vertEx     = param.Number(86.3, bounds=(0, 150))
     
-    chooseTimeSeries = param.ListSelector(default=['Rad_Meas: Global Up', 'Rad_Meas: Direct Down', 'Rad_Meas: Diffuse Down',
-                                                   'M: Planar', #'M: Raster Mean', #'M: Horizon Mean',
-                                                   'Alpha: Planar', #'Alpha: Raster Mean', #'Alpha: Horizon Mean',
-                                                   'IDR_Recon: Planar', #'IDR_Recon: Raster Mean'#, #'IDR_Recon: Horizon Mean',
-                                                  ],
-                                          objects=['Rad_Meas: Global Up', 'Rad_Meas: Direct Down', 'Rad_Meas: Diffuse Down',
-                                                   'M: Planar', #'M: Raster Mean', 'M: Horizon Mean',
-                                                   'Alpha: Planar', #'Alpha: Raster Mean', 'Alpha: Horizon Mean',
-                                                   'IDR_Recon: Planar', #'IDR_Recon: Raster Mean', 'IDR_Recon: Horizon Mean',
-                                                  ]
-                                         )
+    set_measurements   = param.ListSelector(
+                            default=['Global Up', 'Direct Dwn', 'Diffuse Dwn'],
+                            objects=['Global Up', 'Direct Dwn', 'Diffuse Dwn'])
+    set_planar_curves  = param.ListSelector(
+                            default=['M','Alpha'], objects=['M','Alpha','IDR'])
+    set_raster_curves  = param.ListSelector(
+                            default=[], objects=['M','Alpha','IDR'])
+    set_horizon_curves = param.ListSelector(
+                            default=[], objects=['M','Alpha','IDR'])
+    set_curve_filler   = param.ListSelector(
+                            default=[], 
+                            objects=['> Selected M\'s', '> Selected Alpha\'s', 
+                                     '> Selected IDR\'s'])
+    set_visibile_curve = param.Boolean(False)
     
     activateMask = param.Selector(default='Remove', objects=['Overlay', 'Remove'])
     bins = param.Integer(default=16, bounds=(8, 64), step=8)
-
     
     run = param.Boolean(False)
+    
+    log = param.String('')
     
     progress = pn.widgets.Progress(name='Progress', width=450, height=25,
                                    value=0, bar_color='info')
     
     modelComplete = param.ObjectSelector(default="Incomplete", 
-                                         objects=["Incomplete", "Running", "Complete"])
+                                         objects=["Incomplete", "Complete"])
     
     dictionary = param.Dict(default={"default": "dictionary"})
-
-    fill_True = param.Boolean(True, doc="A Boolean parameter")
