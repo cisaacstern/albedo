@@ -2,8 +2,14 @@ import _albedo.dashcontrols as dashcontrols
 import param
 import panel as pn
 import matplotlib.pyplot as plt
+import markdown
 
 class DashLayout(dashcontrols.DashControls):
+    
+    def return_README(self):
+        with open('README.md','r') as f:
+            html = markdown.markdown(f.read())
+        return html
     
     @param.depends('date')
     def return_time_control(self):
@@ -106,17 +112,6 @@ class DashLayout(dashcontrols.DashControls):
             In the next tab, review results of completed model.
             '''
         )
-        self.cap_state = pn.WidgetBox(
-            pn.pane.Markdown(
-            '''
-            The displayed datetime is XXXXX. \n
-            Click here to download a .json object which captures all 
-            current state variables.
-            To upload a saved .json object, click here.
-            '''
-            ), 
-            width=350, name='Capture State'
-        )
         self.config_accordion = pn.Tabs(
             pn.Row(self.tryptich,
                    name='Raster Settings',
@@ -128,13 +123,16 @@ class DashLayout(dashcontrols.DashControls):
                      )
         )
         self.model_tabs = pn.Row(
-            pn.Tabs(pn.Row(
+            pn.Tabs(pn.pane.Markdown(self.return_README(),
+                        name='README'
+                    ),
+                    pn.Row(
                         pn.Column(self.init_comment, self.json_pane),
                         pn.Column(
                             pn.Row(self.file_selector, self.pointcloud_control),
                             self.axes3d
                         ),
-                        name='Initialize'
+                        name='Date'
                     ),
                     pn.Column(
                         pn.Row(self.raster_control, self.azi_bins,
@@ -158,24 +156,54 @@ class DashLayout(dashcontrols.DashControls):
                         ),
                         name='Run'
                     ),
-                    pn.Column(pn.Row(#self.time_control.clone(), 
-                                     self.timeseries_control
-                                    ),
-                              pn.Tabs(pn.Column(
-                                          self.timeSeries_Plot,
-                                          name='Time Series Plot',
-                                          width=900
-                                          ),
-                                      pn.Column(
-                                          self.return_model_df,
-                                          name='Dataframe'
-                                      ),
-                              ), 
-                              name='Analyze'
+                    pn.Tabs(
+                        pn.Column(
+                            'On this pane, set your output config and commit it to file.',
+                            pn.Row(self.timeseries_control,
+                                   'Save Rasters as: UM, M'
+                                   'Save arrays as: .npy, .mat, .ascii'
+                                  ),
+                            pn.Row( 'Commit Settings to File: COMMIT BUTTON', 'PROGRESS BAR'),
+                            self.timeSeries_Plot,
+                            name = 'Settings',  width=900
+                        ),
+                        pn.Column('''
+                                    You can view the movies you've saved here.
+                                    There will be a fileselector.
+                                        - names of the folders will reflect model run, e.g. DATE20200613_RSB0300532
+                                    Inside the folder will be:
+                                        - a json config with the model settings
+                                        - the static timeseries plot
+                                        - the video of the time series plot with a vertical line marker,
+                                          and updating rasters along with updating timepoint
+                                        - the dataframe as csv: w/ columns for your selected curves
+                                        - sub directory of timeinvariant arrays, in {numpy, matlab, or ascii}
+                                            - 2D elevation, e.g. DATE20200613_RSB0300532_E.npy
+                                            - 2D slope, e.g. DATE20200613_RSB0300532_S.npy
+                                            - 2D aspect, e.g. DATE20200613_RSB0300532_A.npy
+                                        - sub directory of arrays, in {numpy, matlab, or ascii}
+                                            - subdirectory of masked elevation arrays
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_ME.npy
+                                            - subdirectory of masked slope arrays
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MS.npy
+                                            - subdirectory of masked aspect arrays
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MA.npy
+                                            - subdirectory of un-masked aspect arrays
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_UM.npy
+                                            - subdirectory of masked M arrays
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MM.npy
+                                            - subdirectory of masks
+                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MSK.npy
+                                  ''',
+                                  name='Review'
+                                 ),
+                        pn.Column('''
+                                    You can select directories from the fileselector, to download as zips
+                                  ''',
+                                  name='Download'
+                                 ),
+                        name = 'Export'
                     ),
-                    pn.Column(self.cap_state,
-                              name='Export'
-                             ),
                     active=0
                    ),
         )
