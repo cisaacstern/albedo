@@ -19,13 +19,6 @@ class SetFrame(horizonmethods.HorizonMethods):
             for index, t in enumerate(self.dataframe['UTC_datetime'])
         }
         
-        '''
-        self.time_dict = {}
-        for index, t in enumerate(self.dataframe['UTC_datetime'], start=0):
-            t = t - timedelta(hours=self.UTC_offset)
-            time_string = t.strftime("%H:%M:%S")
-            self.time_dict[time_string] = index
-        '''
         self.param.time.objects = sorted(self.time_dict.values())
         self.param.time.names = self.time_dict
         return
@@ -55,7 +48,7 @@ class SetFrame(horizonmethods.HorizonMethods):
         par3.axis["right"].toggle(all=True)
         
         ax.set_ylabel(r"$Radiation  (watts/m^2)$")
-        par1.set_ylabel("Terrain Correction Factor")
+        par1.set_ylabel("M")
         par2.set_ylabel("Albedo")
         par3.set_ylabel(r"$Visible Surface (m^2)$")
         

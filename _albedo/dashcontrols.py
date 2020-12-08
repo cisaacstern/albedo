@@ -37,25 +37,18 @@ class DashControls(runmodel.RunModel):
                 pn.Param(self.param, parameters=['resolution'],
                      width=100, name='Raster'),
                 pn.Param(self.param, parameters=['sigma'],
-                     width=100, name=''),
-                pn.Param(self.param, parameters=['vertEx'],
-                     width=100, name=''),
+                     width=100, name='')
             )
         )
         self.azi_bins = pn.WidgetBox(
             pn.Param(self.param, parameters=['bins'],
                      width=107, name='Azimuth')
         )
-        self.horizon_preview = pn.WidgetBox(
-            pn.Row(
-                pn.Param(self.param, parameters=['activateMask'],
-                         widgets={'activateMask':
-                                  {'widget_type': pn.widgets.RadioBoxGroup, 
-                                   'inline': False}},
-                         width=105,
-                         name='Preview'
-                        )
-            )
+        self.horizon_preview = pn.Param(
+            self.param, parameters=['activateMask'],
+            widgets={'activateMask':{'widget_type': pn.widgets.RadioBoxGroup,
+                                     'inline': False}}, 
+            name='Preview', width=105
         )
         m = pn.Param(
             self.param, parameters=['set_measurements'], 
@@ -108,11 +101,6 @@ class DashControls(runmodel.RunModel):
         self.timeseries_control = pn.WidgetBox(
             pn.Row(m, p, r, h, f, v), 
             width=645, height=100
-        )
-        self.run_tab_logs = pn.WidgetBox(
-            pn.Param(self.param, parameters=[], 
-                     width=520, height=150, name='Build Log'
-                    )
         )
 
         return

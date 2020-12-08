@@ -5,7 +5,7 @@ class DataSet(param.Parameterized):
     #geographic constants
     eastMin, eastMax = 320977, 320980
     northMin, northMax = 4168144, 4168147        
-    geotransform = [0, 1, 0, 0, 0, 1]
+    #geotransform = [0, 1, 0, 0, 0, 1]
     projection = 'WGS84'
     UTC_offset = 8
     lat, long = 37.643, -119.029
@@ -36,7 +36,7 @@ class DataSet(param.Parameterized):
         self.json_obj = {
             'Easting Bounds': (self.eastMin, self.eastMax),
             'Northing Bounds': (self.northMin, self.northMax),
-            'Geotransform': self.geotransform,
+            #'Geotransform': self.geotransform,
             'Projection': self.projection,
             'UTC Offset': self.UTC_offset,
             'LatLong': (self.lat, self.long),

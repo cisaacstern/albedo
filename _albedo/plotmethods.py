@@ -28,7 +28,7 @@ class PlotMethods(setframe.SetFrame):
                     XYZ = self.pFit()
                     X, Y, Z = XYZ[:,:,0], XYZ[:,:,1], XYZ[:,:,2]
                     ax.plot_surface(X, Y, Z, color='r', 
-                                    rstride=1, cstride=1, alpha=0.5)
+                                    rstride=1, cstride=1, alpha=0.4)
 
             ax.view_init(elev=self.elev, azim=self.azim)
             ax.set_xlim(320977, 320980)
@@ -52,7 +52,7 @@ class PlotMethods(setframe.SetFrame):
             fig, ax = plt.subplots(1,3, figsize=figsize)
             
             ds = self.date_string
-            line2 = f'\nR, S, V ={(self.resolution,self.sigma,self.vertEx)}'
+            line2 = f'\nR, S ={(self.resolution,self.sigma)}'
 
             titles = [f'{ds}: Elevation'+line2, f'{ds}: Slope'+line2,
                       f'{ds}: Aspect (South=0, East +)'+line2]
@@ -171,7 +171,7 @@ class PlotMethods(setframe.SetFrame):
             plt.close()
             fig, ax = plt.subplots(1,2, figsize=figsize)
             
-            line2 = f'\nR, S, V, Bins={(self.resolution,self.sigma,self.vertEx,self.bins)}'
+            line2 = f'\nR, S, B={(self.resolution,self.sigma,self.bins)}'
             title1 = f'{self.dt_str}: Terrain Correction'+line2
             title2 = f'{self.dt_str}: Current Visibility'+line2
             titles = [title1, title2]
@@ -235,7 +235,7 @@ class PlotMethods(setframe.SetFrame):
         if self.modelComplete == 'Incomplete':
             plt.close()
             fig, ax = self.fig, self.ax
-            title = 'YYYY:MM:DD (sunrise - sunset); R, S, V, Bins= []'
+            title = 'YYYY:MM:DD (sunrise - sunset); R, S, B= []'
             ax.set_title(title, loc='left')
             ax.text(x=-0.04, y=800, s="Current configuration not yet run.", 
                     fontsize=16)
@@ -253,14 +253,14 @@ class PlotMethods(setframe.SetFrame):
             t_dict = self.param.time.names
             sunrise_sunset = f'({list(t_dict)[0]}-{list(t_dict)[-1]})'
             line1 = f'{self.date_string} {sunrise_sunset};'
-            line2 = f' R, S, V, Bins={[self.resolution,self.sigma,self.vertEx,self.bins]}'
+            line2 = f' R, S, B={[self.resolution,self.sigma,self.bins]}'
             title = line1+line2
             ax_rad.set_title(title, loc='left', fontsize=12)
             
             #x-axis vals (in UTC) & labels (in PT)
             df = self.model_dataframe
             times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
-            time_labels = [t.strftime("%H:%M:%S") for t in times]
+            time_labels = [t.strftime("%H:%M") for t in times]
             time_labels[0] = ''
             ax_rad.set_xticks(times[::4])
             ax_rad.set_xticklabels(time_labels[::4])

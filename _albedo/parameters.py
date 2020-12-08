@@ -15,7 +15,7 @@ class Parameters(dataset.DataSet):
     
     resolution = param.Integer(default=30, bounds=(10, 300), step=10)
     sigma      = param.Number(0.5, bounds=(0, 3))
-    vertEx     = param.Number(86.3, bounds=(0, 150))
+    vertEx     = param.Number(1.0)
     
     set_measurements   = param.ListSelector(
                             default=['Global Up', 'Direct Dwn', 'Diffuse Dwn'],

@@ -7,12 +7,11 @@ class DashLayout(dashcontrols.DashControls):
     
     @param.depends('date')
     def return_time_control(self):
-        return pn.WidgetBox(
-            pn.Param(
+        return pn.Param(
                 self.param, parameters=['time'],
                 widgets={'time':{'widget_type': pn.widgets.DiscreteSlider, 
                                  'width': 180}},
-                         width=200, name='Time'))
+                         width=200, name='')
     
     @param.depends('date', 'resolution', 'sigma', 'vertEx', 'bins')
     def return_config_pane(self):
@@ -21,8 +20,10 @@ class DashLayout(dashcontrols.DashControls):
             config_obj = {
                 'Date': self.date_string,
                 'Raster': {'Resolution': self.resolution,
+                           'Geotransform': self.geotransform,
                            'Sigma': self.sigma,
-                           'Vert Exag': self.vertEx},
+                           'Vert Exag': self.vertEx,
+                          },
                 'Azimuth Bins': self.bins,
             }
             return config_obj
@@ -31,8 +32,8 @@ class DashLayout(dashcontrols.DashControls):
         
         self.dictionary = current_config
         
-        return pn.pane.JSON(current_config, name='JSON',
-                            width=300, theme='dark', depth=-1)
+        return pn.pane.JSON(current_config, name='JSON', width=300, 
+                            theme='dark', depth=2, hover_preview=True)
     
     @param.depends('log')
     def return_log_pane(self):
@@ -91,7 +92,7 @@ class DashLayout(dashcontrols.DashControls):
         
         self.init_comment = pn.pane.Markdown(
             '''
-            Immutable model init settings are presented below for reference. 
+            Model constants presented below for reference. 
             To begin, choose a date from the selector at right.
             Explore the pointcloud with the view controls. 
             In the next tab, specify pointcloud rasterization and azimuth bins.
@@ -137,7 +138,9 @@ class DashLayout(dashcontrols.DashControls):
                     ),
                     pn.Column(
                         pn.Row(self.raster_control, self.azi_bins,
-                               self.horizon_preview, self.return_time_control),
+                               pn.WidgetBox(pn.Row(self.horizon_preview,
+                                                   self.return_time_control))
+                              ),
                         self.config_accordion,
                         name='Configure'
                     ),

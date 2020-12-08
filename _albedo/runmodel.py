@@ -36,9 +36,13 @@ class RunModel(plotmethods.PlotMethods):
             #TODO: bin azimuths - generate a slope to horz reference set here
             
             k, v = list(self.dictionary.keys()), list(self.dictionary.values())
-            self.log += f"""\nModel queued with config:
+            rk, rv = list(v[1].keys()), list(v[1].values())
+            self.log +=  f"""\nModel queued with config:
             {k[0]}: {v[0]}
-            {k[1]}: {v[1]}
+            {k[1]}: {rk[0]}: {rv[0]}
+                    {rk[1]}: {rv[1]}
+                    {rk[2]}: {rv[2]}
+                    {rk[3]}: {rv[3]}
             {k[2]}: {v[2]}
             """
             #runnnn!

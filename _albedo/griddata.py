@@ -31,9 +31,11 @@ class GridData(pointdata.PointData):
     def np2rdarray(self, in_array, no_data=-9999):
         out_array = rd.rdarray(in_array, no_data=no_data)
         out_array.projection = self.projection
-        out_array.geotransform = self.geotransform
+        cell_scale = np.around(3/self.resolution, 5)
+        out_array.geotransform = [0, cell_scale, 0, 0, 0, cell_scale]
+        self.geotransform = out_array.geotransform
         return out_array
-
+    
     def raster_slope_aspect(self, gaussianArray):
         '''
         given a gaussian array, returns slope and aspect arrays
@@ -41,7 +43,8 @@ class GridData(pointdata.PointData):
         rda = self.np2rdarray(np.asarray(gaussianArray), -9999)
 
         slopeOutfile = TemporaryFile()
-        np.save(slopeOutfile, rd.TerrainAttribute(rda, attrib='slope_radians', zscale=self.vertEx))
+        np.save(slopeOutfile, rd.TerrainAttribute(rda, attrib='slope_radians', 
+                                                  zscale=self.vertEx))
         _ = slopeOutfile.seek(0)
         slopeArray = np.load(slopeOutfile)
         slopeOutfile.close()
