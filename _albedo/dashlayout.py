@@ -159,13 +159,18 @@ class DashLayout(dashcontrols.DashControls):
                     pn.Tabs(
                         pn.Column(
                             'On this pane, set your output config and commit it to file.',
-                            pn.Row(self.timeseries_control,
-                                   'Save Rasters as: UM, M'
-                                   'Save arrays as: .npy, .mat, .ascii'
-                                  ),
                             pn.Row( 'Commit Settings to File: COMMIT BUTTON', 'PROGRESS BAR'),
-                            self.timeSeries_Plot,
-                            name = 'Settings',  width=900
+                            pn.Row(self.timeseries_control,
+                                   pn.WidgetBox('Save Rasters as: UM, M',
+                                               'Save arrays as: .npy, .mat, .ascii',
+                                                width=300
+                                               )
+                                  ),
+                            pn.WidgetBox(self.timeSeries_Plot, 
+                                         name='Timeseries Plot Preview', 
+                                         width=900
+                                        ),
+                            name = 'Commit',  width=900
                         ),
                         pn.Column('''
                                     You can view the movies you've saved here.
@@ -204,7 +209,8 @@ class DashLayout(dashcontrols.DashControls):
                                  ),
                         name = 'Export'
                     ),
-                    active=0
+                    active=0,
+                    tabs_location='left'
                    ),
         )
         
