@@ -3,6 +3,7 @@ import param
 import panel as pn
 import matplotlib.pyplot as plt
 import markdown
+import numpy as np
 
 class DashLayout(dashcontrols.DashControls):
     
@@ -19,33 +20,17 @@ class DashLayout(dashcontrols.DashControls):
                                  'width': 180}},
                          width=200, name='')
     
-    @param.depends('date', 'resolution', 'sigma', 'vertEx', 'bins')
-    def return_config_pane(self):
+    @param.depends('dictionary')
+    def return_config_dict(self):
+        return pn.pane.JSON(self.dictionary, name='JSON', width=300, 
+                            theme='dark', depth=2, hover_preview=False)
         
-        def grab_config():
-            config_obj = {
-                'Date': self.date_string,
-                'Raster': {'Resolution': self.resolution,
-                           'Geotransform': self.geotransform,
-                           'Sigma': self.sigma,
-                           'Vert Exag': self.vertEx,
-                          },
-                'Azimuth Bins': self.bins,
-            }
-            return config_obj
-        
-        current_config = grab_config()
-        
-        self.dictionary = current_config
-        
-        return pn.pane.JSON(current_config, name='JSON', width=300, 
-                            theme='dark', depth=2, hover_preview=True)
     
     @param.depends('log')
     def return_log_pane(self):
         return pn.pane.HTML(
         f"""
-        <div id=""style="overflow-y:scroll; height:400px;">
+        <div style="overflow-y:scroll;position:relative;bottom:0;height:400px;">
         <pre style="color:white; font-size:12px">Build Log</pre>
         <pre style="color:deepskyblue; font-size:12px">{self.log}</pre>
         </div>
@@ -90,8 +75,8 @@ class DashLayout(dashcontrols.DashControls):
     def set_layout(self):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
-            self.set_axes, #self.calc_meanM_list, self.calc_meanAlpha_list,
-            self.set_m, self.set_masks, self.run_model, self.reset_run_state
+            self.set_axes, self.set_m, self.set_masks, self.run_model, 
+            self.reset_run_state, self.update_config
         )
         self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, 
                                       theme='dark', hover_preview=True)
@@ -143,7 +128,7 @@ class DashLayout(dashcontrols.DashControls):
                         name='Configure'
                     ),
                     pn.Column(pn.Row(
-                        pn.Column(self.run_comment, self.return_config_pane),
+                        pn.Column(self.run_comment, self.return_config_dict),
                         pn.Column(
                             pn.Row(self.return_run_button, 
                                    pn.Column(

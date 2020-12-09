@@ -33,18 +33,34 @@ class RunModel(plotmethods.PlotMethods):
             pass
         elif self.run == True:
             start_t = time.time()
-            #TODO: bin azimuths - generate a slope to horz reference set here
             
+            #run log updates:
             k, v = list(self.dictionary.keys()), list(self.dictionary.values())
             rk, rv = list(v[1].keys()), list(v[1].values())
+            ak, av = list(v[2].keys()), list(v[2].values())
             self.log +=  f"""\nModel queued with config:
             {k[0]}: {v[0]}
             {k[1]}: {rk[0]}: {rv[0]}
                     {rk[1]}: {rv[1]}
                     {rk[2]}: {rv[2]}
                     {rk[3]}: {rv[3]}
-            {k[2]}: {v[2]}
+            {k[2]}:{ak[0]}: {av[0]}
             """
+            if self.bins != 'Max':
+                bins = av[1]
+                vals = [str(np.around(val,1)) for val in bins]
+                vals = [' '+val if len(val)==4 else val for val in vals]
+                vals = ['  '+val if len(val)==3 else val for val in vals]
+                newline = "\n"
+                self.log += f"""{ak[1]}: {newline}"""
+                cycles = int((len(bins))/8)*8
+                lines = ["            "+', '.join(vals[:8]) if c==0
+                         else ', '.join(vals[c:c+8]) for c in range(0, cycles, 8)]
+                tabbed_newline = newline+"            "
+                self.log +=f"""{tabbed_newline.join(lines)}"""
+            else:
+                self.log +=f"""{ak[1]}: {av[1]}"""
+                    
             #runnnn!
             plt.close('all')                
             df = self.dataframe.copy(deep=True)
@@ -56,12 +72,12 @@ class RunModel(plotmethods.PlotMethods):
             self.p_slope, self.p_aspect = self.planar_slope_aspect()
             Mp_list = [self.M_calculation(df, row, choice='planar') 
                        for row in range(ncols)]
-            df.insert(7, 'M_planar', Mp_list)
+            df.insert(8, 'M_planar', Mp_list)
 
             #PLANAR ALBEDO
             Ap_list = [self.albedo(df, row, choice='planar')
                        for row in range(ncols)]
-            df.insert(8, 'Albedo_planar', Ap_list)
+            df.insert(9, 'Albedo_planar', Ap_list)
             self.log += '\nAdded planar M and albedo to dataframe'
 
             #RASTER meanM
@@ -70,17 +86,53 @@ class RunModel(plotmethods.PlotMethods):
                     self.M_calculation(df=df, row=row, choice='raster')
                 ) for row in range(ncols)
             ]
-            df.insert(9, 'raster_meanM', meanM_list)
+            df.insert(10, 'raster_meanM', meanM_list)
 
             #RASTER_mean_ALPHA
             meanAlpha_list = [
                 self.albedo(df, row, choice = 'raster') 
                 for row in range(ncols)
             ]
-            df.insert(10, 'raster_meanALPHA', meanAlpha_list)
+            df.insert(11, 'raster_meanALPHA', meanAlpha_list)
             self.log += """\nAdded raster M and albedo to dataframe
             Running horizon model...
             """
+            
+            #bin azimuths - generate a slope to horz reference set here
+            '''
+            gauss = dayList[3][:,:,1]
+            referenceGrids, maskWaypoints = [], []
+            '''
+            #bins          = np.linspace(0,360,self.bins,endpoint=True)
+            #aziVals       = df['solarAzimuth'].to_numpy(copy=True)
+            #binAssignment = np.digitize(aziVals, bins)
+            '''
+            uniqueBins    = np.unique(binAssignment)
+
+            aziStarter = bins[1]/2
+            binSize    = bins[1]
+            lastAzi    = 360 - aziStarter
+            binAzimuth = np.linspace(binStarter, lastAzi, self.bins-1, endpoint=True)
+            
+            for i in range(0,len(uniqueBins)):
+                aziBin = uniqueBins[i]
+                azi = binAzimuth[aziBin-1]
+                rotatedGrid = rotate2azimuth(azi, gauss)
+                hPointGrid = fwdHorz2D(rotatedGrid)
+                slope2horzGrid = slope2horz(rotatedGrid, hPointGrid)
+                referenceStack = np.dstack((rotatedGrid, hPointGrid, slope2horzGrid))
+                referenceGrids.append(referenceStack)
+            
+            slope2horz_refs = []
+            for index in range(ncols):
+                plt.close('all')
+                #trigger new raster set
+                #  NOTE: I believe this cannot be easily converted
+                #        to list comprehensions, given that it req-
+                #        uires triggering this 'cascade' of state 
+                #        rasters by indexing self.time parameter.
+                self.time = index
+            '''
 
             maskedmeanM_list, viz_percent_list = [], []
             for index in range(ncols):
@@ -106,17 +158,17 @@ class RunModel(plotmethods.PlotMethods):
                 #update progress bar
                 self.progress.value = self.time
                 
-            df.insert(11, 'maskedmeanM', maskedmeanM_list)
+            df.insert(12, 'maskedmeanM', maskedmeanM_list)
             
             maskedAlbedo_list = [
                 self.albedo(df, row, choice = 'masked')
                 for row in range(ncols)
             ]
-            df.insert(12, 'maskedAlbedo', maskedAlbedo_list)
+            df.insert(13, 'maskedAlbedo', maskedAlbedo_list)
             
             viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
             
-            df.insert(13, 'viz_percent', viz_percent_list)
+            df.insert(14, 'viz_percent', viz_percent_list)
             
             del (Mp_list, Ap_list, meanM_list, meanAlpha_list, 
                  maskedmeanM_list, maskedAlbedo_list, viz_percent_list)

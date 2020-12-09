@@ -108,13 +108,13 @@ class PlotMethods(setframe.SetFrame):
 
             return fig
     
-    @param.depends('run', 'modelComplete', 'date', 'time')
+    @param.depends('run', 'modelComplete', 'date', 'time', 'bins')
     def polarAxes(self, figsize=(3.5,5), topMargin=1, bottomMargin=0,
                   leftMargin=0.1, rightMargin=0.92):
         if self.run==True and self.modelComplete=='Incomplete':
             pass
         else:
-            dataframe = self.dataframe
+            df = self.dataframe
             
             plt.close()
             fig = plt.figure(figsize=figsize)
@@ -130,15 +130,24 @@ class PlotMethods(setframe.SetFrame):
             ax.set_rmin(0)
             ax.set_rmax(90)
             ax.set_rlabel_position(90)
-
-            xs, ys = dataframe['solarAzimuth'], dataframe['solarAltitude']
+            '''
+            xs, ys = df['solarAzimuth'], df['solarAltitude']
             xs, ys = np.deg2rad(xs), ys
+            '''
+            if self.bins != 'Max':
+                xs = [np.deg2rad(self.angle_dict[entry]) 
+                      for entry in df['bin_assignment']]
+            else:
+                xs = np.deg2rad(df['solarAzimuth'])
+            
+            ys = df['solarAltitude']
+            
             ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
 
-            x, y = (dataframe['solarAzimuth'].iloc[self.time], 
-                    dataframe['solarAltitude'].iloc[self.time])
+            x, y = (df['solarAzimuth'].iloc[self.time], 
+                    df['solarAltitude'].iloc[self.time])
             
-            self.dt_str = self.dataframe['MeasDateTime'].iloc[self.time]
+            self.dt_str = df['MeasDateTime'].iloc[self.time]
             line1=f'{self.dt_str} Sun Position'
             line2=f'Azi, SZA={np.around((x,y),1)}, Bins={self.bins}'
             

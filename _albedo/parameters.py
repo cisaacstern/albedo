@@ -33,7 +33,9 @@ class Parameters(dataset.DataSet):
     set_visibile_curve = param.Boolean(False)
     
     activateMask = param.Selector(default='Remove', objects=['Overlay', 'Remove'])
-    bins = param.Integer(default=16, bounds=(8, 64), step=8)
+    
+    bins = param.ObjectSelector(default=32,
+                                objects=[8, 16, 24, 32, 40, 48, 56, 64, 'Max'])
     
     run = param.Boolean(False)
     

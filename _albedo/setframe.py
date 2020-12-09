@@ -6,12 +6,15 @@ from mpl_toolkits import axisartist
 import panel as pn
 from datetime import timedelta
 import numpy.ma as ma
+import numpy as np
 
 class SetFrame(horizonmethods.HorizonMethods):
     
     @param.depends('date')
     def set_dataframe(self):
         self.dataframe = self.sun_position()
+        filler = filler = ['' for i in range(len(self.dataframe))]
+        self.dataframe.insert(7, 'bin_assignment', filler)
         self.date_string = self.enabledDays[self.date].strftime("%Y-%m-%d")
         
         self.time_dict = {
@@ -22,6 +25,39 @@ class SetFrame(horizonmethods.HorizonMethods):
         self.param.time.objects = sorted(self.time_dict.values())
         self.param.time.names = self.time_dict
         return
+    
+    @param.depends('date', 'resolution', 'sigma', 'bins')
+    def update_config(self):
+        
+        if self.bins != 'Max':
+            bin_array       = np.linspace(0,360,self.bins,endpoint=True)
+            real_azis       = self.dataframe['solarAzimuth'].to_numpy(copy=True)
+            bin_assignment  = np.digitize(real_azis, bin_array)
+            self.dataframe['bin_assignment'] = bin_assignment
+            
+            bin_angle = bin_array[1] # the angle width of a bin
+            first_angle = bin_angle/2 
+            last_angle = 360 - first_angle
+            angle_array = np.linspace(first_angle, last_angle,
+                                      self.bins-1, endpoint=True)
+            self.angle_dict = dict(zip(np.arange(self.bins), angle_array))
+            
+        else:
+            self.bin_dict = 'bins == Max: bin_dict not defined.'
+        
+        self.dictionary = {
+            'Date': self.date_string,
+            'Raster': {'Resolution': self.resolution,
+                       'Geotransform': self.geotransform,
+                       'Sigma': self.sigma,
+                       'Vert Exag': self.vertEx
+                      },
+            'Azimuth': {'Count': self.bins,
+                        'Bins': (bin_array.tolist()
+                                 if self.bins != 'Max' else 'N/A')
+                       }
+        }        
+        return 
     
     @param.depends('date', 'resolution', 'sigma', 'vertEx')
     def set_raster(self):

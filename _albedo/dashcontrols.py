@@ -42,6 +42,8 @@ class DashControls(runmodel.RunModel):
         )
         self.azi_bins = pn.WidgetBox(
             pn.Param(self.param, parameters=['bins'],
+                     widgets={'bins':{'widget_type': pn.widgets.DiscreteSlider,
+                                      'width':87}}, 
                      width=107, name='Azimuth')
         )
         self.horizon_preview = pn.Param(
