@@ -13,6 +13,20 @@ class DashLayout(dashcontrols.DashControls):
             html = markdown.markdown(f.read())
         return html
     
+    @param.depends('run_state')
+    def dyptich_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            return self.diptych
+    
+    @param.depends('run_state')
+    def polar_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            return self.polarAxes
+    
     @param.depends('date')
     def return_time_control(self):
         return pn.Param(
@@ -83,11 +97,11 @@ class DashLayout(dashcontrols.DashControls):
         )
         self.config_accordion = pn.Tabs(
             pn.Row(self.tryptich,
-                   name='Raster Settings',
+                   name='Raster Preview',
                    width=900
                   ),
-            pn.Column(pn.Row(self.polarAxes, self.diptych),
-                      name='Terrain Correction Preview',
+            pn.Column(pn.Row(self.polar_dispatch, self.dyptich_dispatch),
+                      name='Azimuth/M Preview',
                       width=900
                      )
         )
@@ -194,5 +208,6 @@ class DashLayout(dashcontrols.DashControls):
         self.update_config()
         self.set_controls()
         self.set_layout()
+        self.horizon_package = self.slope2horz()
         return pn.Column(self.function_row,
                          self.model_tabs)

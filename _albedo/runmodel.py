@@ -2,9 +2,11 @@ import _albedo.plotmethods as plotmethods
 import param
 import time
 import numpy as np
-#matplotlib.use("Agg")
+
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-#import matplotlib.animation as animation
+import matplotlib.animation as animation
 
 class RunModel(plotmethods.PlotMethods):
       
@@ -34,6 +36,7 @@ class RunModel(plotmethods.PlotMethods):
         if self.run == False:
             pass
         elif self.run == True:
+            self.run_state = True
             start_t = time.time()
             
             #run log updates:
@@ -106,6 +109,9 @@ class RunModel(plotmethods.PlotMethods):
             """            
 
             maskedmeanM_list, viz_percent_list = [], []
+            
+            self.diptychs = []
+            
             for index in range(ncols):
                 plt.close('all')
                 #trigger new raster set
@@ -122,13 +128,35 @@ class RunModel(plotmethods.PlotMethods):
                 else:
                     vp = 1
                 viz_percent_list.append(vp)
+                
+                ####MOVIE MADNESS#####
+                #save a diptych
+                #artists = self.diptych().get_children()
+                #diptychs.append(artists[1:])
+                img_array = self.diptych()
+                self.diptychs.append(img_array)
+                    
                 #calc masked M
                 m = self.M_calculation(df, row=index, choice='masked')
                 maskedmeanM = np.mean(m)
                 maskedmeanM_list.append(maskedmeanM)
                 #update progress bar
                 self.progress.value = self.time
-                
+            
+            self.log += 'Writing mp4...'
+            
+            ####MOVIE MADNESS#####
+            # Set up formatting for the movie files
+            fig2 = plt.figure(tight_layout=True, dpi=300)
+            plt.axis('off')
+            #plt.tight_layout()
+            ims = [(plt.imshow(img),) for img in self.diptychs]
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+            im_ani = animation.ArtistAnimation(fig2, ims, interval=200, repeat_delay=3000, blit=False)
+            im_ani.save('exports/diptych.mp4', writer=writer)
+            ####END MOVIE MADNESS#####
+            
             df.insert(12, 'maskedmeanM', maskedmeanM_list)
             
             maskedAlbedo_list = [
@@ -160,5 +188,7 @@ class RunModel(plotmethods.PlotMethods):
             </pre>
             """
             self.modelComplete = 'Complete'
+            self.run_state = False
+
             return 
         

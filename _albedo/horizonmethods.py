@@ -79,7 +79,7 @@ class HorizonMethods(setframe.SetFrame):
     #Second set of functions---ALTITUDE DEPENDANT---begins here
     def horizon_dispatch(self):
         if self.bins != 'Max':
-            if self.run==True and self.modelComplete=='Incomplete':
+            if self.run_state==True:
                 col = self.dataframe['bin_assignment']                    
                 current_bin = col.iloc[self.time]
                 trigger_update = (True

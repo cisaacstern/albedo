@@ -2,6 +2,10 @@ import _albedo.setaxes as setaxes
 import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+
 import numpy as np
 from datetime import timedelta
 
@@ -113,134 +117,131 @@ class PlotMethods(setaxes.SetAxes):
 
             return fig
     
-    @param.depends('run', 'modelComplete', 'date', 'time', 'bins')
+    @param.depends('date', 'time', 'bins')
     def polarAxes(self, figsize=(3.5,5), topMargin=1, bottomMargin=0,
                   leftMargin=0.1, rightMargin=0.92):
-        if self.run==True and self.modelComplete=='Incomplete':
-            pass
-        else:
-            df = self.dataframe
-            
-            plt.close()
-            fig = plt.figure(figsize=figsize)
-            ax = fig.add_subplot(111, projection='polar')
-            ax.set_theta_zero_location('N')
-            ax.set_xticks(([np.deg2rad(0), np.deg2rad(45), np.deg2rad(90),
-                            np.deg2rad(135), np.deg2rad(180), np.deg2rad(225),
-                            np.deg2rad(270), np.deg2rad(315)]))
-            xlbls = np.array(['N','45','E','135','S','225','W','315'])
-            ax.set_xticklabels(xlbls, rotation="vertical", size=12)
-            ax.tick_params(axis='x', pad = 0.5)
-            ax.set_theta_direction(-1)
-            ax.set_rmin(0)
-            ax.set_rmax(90)
-            ax.set_rlabel_position(90)
-            '''
-            xs, ys = df['solarAzimuth'], df['solarAltitude']
-            xs, ys = np.deg2rad(xs), ys
-            '''
-            if self.bins != 'Max':
-                col = df['bin_assignment']
-                xs  = [np.deg2rad(self.angle_dict[entry]) for entry in col]
-                x   = np.deg2rad(self.angle_dict[col.iloc[self.time]])
-            else:
-                col = df['solarAzimuth']
-                xs  = np.deg2rad(col)
-                x   = np.deg2rad(col.iloc[self.time])
-            
-            ys = df['solarAltitude']
-            y  = df['solarAltitude'].iloc[self.time]
-            
-            ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
-            ax.scatter(x, y, s=500, c='gold',alpha=1)
-            '''
-            x, y = (df['solarAzimuth'].iloc[self.time], 
-                    df['solarAltitude'].iloc[self.time])
-            '''
-            self.dt_str = df['MeasDateTime'].iloc[self.time]
-            line1=f'{self.dt_str} Sun Position'
-            line2=f'Azi, SZA={np.around((np.rad2deg(x),y),1)}, Bins={self.bins}'
-            
-            #x, y = np.deg2rad(x), y
-            
-            plt.subplots_adjust(top=topMargin, bottom=bottomMargin,
-                                left=leftMargin, right=rightMargin)
-            
-            p = ax.get_position().get_points().flatten()
-            ax_cbar = fig.add_axes([p[0]+0.085, 0.85, p[2]-p[0], 0.05])
-            ax_cbar.set_title(line1+'\n'+line2, loc='left')
-            ax_cbar.axis('off')
-            
-            plt.close()
-
-            return fig
         
-    @param.depends('run', 'modelComplete', 'date', 'resolution', 'sigma', 
-                   'time', 'activateMask')
+        df = self.dataframe
+
+        plt.close()
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(111, projection='polar')
+        ax.set_theta_zero_location('N')
+        ax.set_xticks(([np.deg2rad(0), np.deg2rad(45), np.deg2rad(90),
+                        np.deg2rad(135), np.deg2rad(180), np.deg2rad(225),
+                        np.deg2rad(270), np.deg2rad(315)]))
+        xlbls = np.array(['N','45','E','135','S','225','W','315'])
+        ax.set_xticklabels(xlbls, rotation="vertical", size=12)
+        ax.tick_params(axis='x', pad = 0.5)
+        ax.set_theta_direction(-1)
+        ax.set_rmin(0)
+        ax.set_rmax(90)
+        ax.set_rlabel_position(90)
+        
+        if self.bins != 'Max':
+            col = df['bin_assignment']
+            xs  = [np.deg2rad(self.angle_dict[entry]) for entry in col]
+            x   = np.deg2rad(self.angle_dict[col.iloc[self.time]])
+        else:
+            col = df['solarAzimuth']
+            xs  = np.deg2rad(col)
+            x   = np.deg2rad(col.iloc[self.time])
+
+        ys = df['solarAltitude']
+        y  = df['solarAltitude'].iloc[self.time]
+
+        ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
+        ax.scatter(x, y, s=500, c='gold',alpha=1)
+        
+        self.dt_str = df['MeasDateTime'].iloc[self.time]
+        line1=f'{self.dt_str} Sun Position'
+        line2=f'Azi, SZA={np.around((np.rad2deg(x),y),1)}, Bins={self.bins}'
+
+        plt.subplots_adjust(top=topMargin, bottom=bottomMargin,
+                            left=leftMargin, right=rightMargin)
+
+        p = ax.get_position().get_points().flatten()
+        ax_cbar = fig.add_axes([p[0]+0.085, 0.85, p[2]-p[0], 0.05])
+        ax_cbar.set_title(line1+'\n'+line2, loc='left')
+        ax_cbar.axis('off')
+
+        plt.close()
+
+        return fig
+        
+    @param.depends('date', 'resolution', 'sigma', 'time', 'activateMask')
     def diptych(self, figsize=(8.25,5), topMargin=0.85, bottomMargin=0.05,
                 leftMargin=0.095, rightMargin=0.95, wspace=0.1, hspace=0):
         '''
         generates and plots a 'magma' themed M raster and 
         the direct rad shade mask for the given date & time
         '''
-        if self.run==True and self.modelComplete == 'Incomplete':
-            pass
+        plt.close()
+        fig, ax = plt.subplots(1,2, figsize=figsize, dpi=300)
+        
+        canvas = FigureCanvasAgg(fig)
+
+        line2 = f'\nR, S, B={(self.resolution,self.sigma,self.bins)}'
+        title1 = f'{self.dt_str}: Terrain Correction'+line2
+        title2 = f'{self.dt_str}: Current Visibility'+line2
+        titles = [title1, title2]
+
+        if self.activateMask == 'Overlay':
+            imgs = [self.masked_m, self.mask]
+        elif self.activateMask == 'Remove':
+            imgs = [self.m, self.mask]
+
+        cmaps = ['magma', 'binary']
+        cmapRanges = [(0,2), (0, 1)]
+
+        ticks = np.linspace(0, self.resolution-1, 4)
+        xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
+                   str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
+        ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
+                   str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
+
+        ims = []
+        for i in range(2):
+            img, cmap = imgs[i], cmaps[i]
+            im = ax[i].imshow(img, origin='lower', cmap=cmap,
+                              vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
+            ims.append(im)
+            ax[i].set_xticks(ticks=ticks)
+            ax[i].set_xticklabels(labels=xlabels)
+            ax[i].set_yticks(ticks=ticks)
+            if i == 0:
+                ax[i].set_yticklabels(labels=ylabels)
+                ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
+            else:
+                ax[i].set_yticklabels(labels=[])
+            if i == 0:
+                ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
+            ax[i].set_aspect("equal")
+
+        plt.subplots_adjust(left=leftMargin, right=rightMargin,
+                                top=topMargin, bottom=bottomMargin,
+                                wspace=wspace, hspace=hspace)
+
+        for i in range(2):
+            p = ax[i].get_position().get_points().flatten()
+            ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
+            ax_cbar.set_title(titles[i], loc='left')
+            cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+            if i == 1:
+                cb.set_ticks([0, 1])
+                cb.set_ticklabels("Visible", "Shaded")
+                
+        # Retrieve a view on the renderer buffer
+        canvas.draw()
+        buf = canvas.buffer_rgba()
+        # convert to a NumPy array
+        X = np.asarray(buf)
+
+        plt.close()
+        
+        if self.run_state == True:
+            return X
         else:
-            plt.close()
-            fig, ax = plt.subplots(1,2, figsize=figsize)
-            
-            line2 = f'\nR, S, B={(self.resolution,self.sigma,self.bins)}'
-            title1 = f'{self.dt_str}: Terrain Correction'+line2
-            title2 = f'{self.dt_str}: Current Visibility'+line2
-            titles = [title1, title2]
-            
-            if self.activateMask == 'Overlay':
-                imgs = [self.masked_m, self.mask]
-            elif self.activateMask == 'Remove':
-                imgs = [self.m, self.mask]
-            
-            cmaps = ['magma', 'binary']
-            cmapRanges = [(0,2), (0, 1)]
-            
-            ticks = np.linspace(0, self.resolution-1, 4)
-            xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
-                       str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
-            ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
-                       str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
-            
-            ims = []
-            for i in range(2):
-                img, cmap = imgs[i], cmaps[i]
-                im = ax[i].imshow(img, origin='lower', cmap=cmap,
-                                  vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
-                ims.append(im)
-                ax[i].set_xticks(ticks=ticks)
-                ax[i].set_xticklabels(labels=xlabels)
-                ax[i].set_yticks(ticks=ticks)
-                if i == 0:
-                    ax[i].set_yticklabels(labels=ylabels)
-                    ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
-                else:
-                    ax[i].set_yticklabels(labels=[])
-                if i == 0:
-                    ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
-                ax[i].set_aspect("equal")
-           
-            plt.subplots_adjust(left=leftMargin, right=rightMargin,
-                                    top=topMargin, bottom=bottomMargin,
-                                    wspace=wspace, hspace=hspace)
-
-            for i in range(2):
-                p = ax[i].get_position().get_points().flatten()
-                ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
-                ax_cbar.set_title(titles[i], loc='left')
-                cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
-                if i == 1:
-                    cb.set_ticks([0, 1])
-                    cb.set_ticklabels("Visible", "Shaded")
-
-            plt.close()
-
             return fig
         
     @param.depends('modelComplete', 'date', 'set_measurements', 
