@@ -7,8 +7,8 @@ class DashControls(runmodel.RunModel):
         self.file_selector = pn.WidgetBox(
             pn.Param(self.param, parameters=['date'], 
                      widgets={'date':{'widget_type': pn.widgets.DiscreteSlider, 
-                                      'width': 105}},
-                     width=120, name='File'
+                                      'width': 180}},
+                     width=200, name='File'
                     )
         )
         self.pointcloud_control = pn.WidgetBox(
@@ -24,12 +24,7 @@ class DashControls(runmodel.RunModel):
                               {'widget_type': pn.widgets.IntSlider, 
                                       'width': 80}},
                      width=100, name=''
-                    ),
-                pn.Param(self.param, parameters=['azim'], 
-                     widgets={'azim':{'widget_type': pn.widgets.IntSlider, 
-                                      'width': 80}},
-                     width=100, name=''
-                    ),
+                    )
             )
         )
         self.raster_control = pn.WidgetBox(

@@ -1,0 +1,28 @@
+'''
+You can view the movies you've saved here.
+There will be a fileselector.
+    - names of the folders will reflect model run, e.g. DATE20200613_RSB0300532
+Inside the folder will be:
+    - a json config with the model settings
+    - the static timeseries plot
+    - the video of the time series plot with a vertical line marker,
+      and updating rasters along with updating timepoint
+    - the dataframe as csv: w/ columns for your selected curves
+    - sub directory of timeinvariant arrays, in {numpy, matlab, or ascii}
+        - 2D elevation, e.g. DATE20200613_RSB0300532_E.npy
+        - 2D slope, e.g. DATE20200613_RSB0300532_S.npy
+        - 2D aspect, e.g. DATE20200613_RSB0300532_A.npy
+    - sub directory of arrays, in {numpy, matlab, or ascii}
+        - subdirectory of masked elevation arrays
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_ME.npy
+        - subdirectory of masked slope arrays
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MS.npy
+        - subdirectory of masked aspect arrays
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MA.npy
+        - subdirectory of un-masked aspect arrays
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_UM.npy
+        - subdirectory of masked M arrays
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MM.npy
+        - subdirectory of masks
+            - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MSK.npy
+'''

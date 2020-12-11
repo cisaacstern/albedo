@@ -16,6 +16,8 @@ class DataSet(param.Parameterized):
     #TODO: transform constants. i.e. richdem vert. exagg.
     
     #filepath constants
+    raw_directory = os.path.join(os.getcwd(), 'data', 'raw')
+    
     pointcloud_directory = os.path.join(os.getcwd(), 'data', 'pointclouds')
     pointclouds = [file for file in os.listdir(pointcloud_directory)]
     pointclouds.sort()
@@ -31,21 +33,6 @@ class DataSet(param.Parameterized):
         tzinfo=datetime.timezone.utc) for filename in pointclouds]
     
     #TODO: assert a check of enabled days against radiometer dates
-    
-    def set_json(self):
-        self.json_obj = {
-            'Easting Bounds': (self.eastMin, self.eastMax),
-            'Northing Bounds': (self.northMin, self.northMax),
-            #'Geotransform': self.geotransform,
-            'Projection': self.projection,
-            'UTC Offset': self.UTC_offset,
-            'LatLong': (self.lat, self.long),
-            'Time Series Resolution (min)': self.timeResolution,
-            'Filepaths': {'Pointclouds': self.pointcloud_directory,
-                          'Radiometers': self.rad_directory
-                         },
-        }
-        return
     
     #for passing to Paramaters
     indexLength = len(pointclouds)-1 #this is probably not needed

@@ -4,6 +4,7 @@ import panel as pn
 import matplotlib.pyplot as plt
 import markdown
 import numpy as np
+import os
 
 class DashLayout(dashcontrols.DashControls):
     
@@ -23,7 +24,7 @@ class DashLayout(dashcontrols.DashControls):
     @param.depends('dictionary')
     def return_config_dict(self):
         return pn.pane.JSON(self.dictionary, name='JSON', width=300, 
-                            theme='dark', depth=2, hover_preview=False)
+                            theme='dark', depth=2, hover_preview=True)
         
     
     @param.depends('log')
@@ -71,31 +72,14 @@ class DashLayout(dashcontrols.DashControls):
             return enabled
         elif self.modelComplete == 'Complete':
             return disabled
+        
+    @param.depends('')
     
     def set_layout(self):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
             self.set_axes, self.set_m, self.set_masks, self.run_model, 
             self.reset_run_state, self.update_config
-        )
-        self.json_pane = pn.pane.JSON(self.json_obj, name='JSON', width=300, 
-                                      theme='dark', hover_preview=True)
-        
-        self.init_comment = pn.pane.Markdown(
-            '''
-            Model constants presented below for reference. 
-            To begin, choose a date from the selector at right.
-            Explore the pointcloud with the view controls. 
-            In the next tab, specify pointcloud rasterization and azimuth bins.
-            '''
-        )
-        self.run_comment = pn.pane.Markdown(
-            '''
-            Current configuration presented below for reference.
-            Press Run to run this config.
-            To adjust config, return to Configure tab. 
-            In the next tab, review results of completed model.
-            '''
         )
         self.config_accordion = pn.Tabs(
             pn.Row(self.tryptich,
@@ -107,92 +91,93 @@ class DashLayout(dashcontrols.DashControls):
                       width=900
                      )
         )
+        self.filebrowser = pn.widgets.FileSelector(
+            directory = os.path.join(os.getcwd(), 'exports'), 
+            width=375, height=400
+        )
+        self.video = pn.pane.Video(
+            'https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_640_3MG.mp4',
+            width=525, height=400, loop=True
+        )
         self.model_tabs = pn.Row(
             pn.Tabs(pn.pane.Markdown(self.return_README(),
                         name='README'
                     ),
-                    pn.Row(
-                        pn.Column(self.init_comment, self.json_pane),
-                        pn.Column(
-                            pn.Row(self.file_selector, self.pointcloud_control),
-                            self.axes3d
-                        ),
-                        name='Date'
-                    ),
                     pn.Column(
-                        pn.Row(self.raster_control, self.azi_bins,
-                               pn.WidgetBox(pn.Row(self.horizon_preview,
-                                                   self.return_time_control))
-                              ),
-                        self.config_accordion,
+                        pn.pane.Markdown(
+                            """### Configure \nHere's how to config."""
+                        ),
+                        pn.Tabs(
+                            pn.Column(
+                                pn.Row(
+                                    self.file_selector, self.pointcloud_control
+                                ),
+                                self.axes3d,
+                                name='Date'
+                            ),
+                            pn.Column(
+                                pn.Row(self.raster_control, self.azi_bins,
+                                       pn.WidgetBox(pn.Row(self.horizon_preview,
+                                                           self.return_time_control))
+                                      ),
+                                self.config_accordion,
+                                name='Raster & Azimuth'
+                            ),
+                            pn.Tabs(
+                                pn.Column(
+                                    pn.Row('For arrays, choose npy mat or ascii'),
+                                    name='Filetypes'
+                                ),
+                                pn.Column(
+                                    pn.Row(self.timeseries_control),
+                                    pn.WidgetBox(self.timeSeries_Plot, 
+                                                 name='Timeseries Plot Preview', 
+                                                 width=900
+                                                ),
+                                    name='Timeseries'
+                                ),
+                                pn.Column(
+                                    pn.Row('Choose a layout for the video'),
+                                    name='Video Layout'
+                                ),
+                            name = 'Output',  width=900
+                            )
+                        ),
                         name='Configure'
                     ),
-                    pn.Column(pn.Row(
-                        pn.Column(self.run_comment, self.return_config_dict),
-                        pn.Column(
-                            pn.Row(self.return_run_button, 
-                                   pn.Column(
-                                       pn.Spacer(height=20),
-                                       self.progress
-                                   )
-                                  ),
-                            self.return_log_pane
-                            )
+                    pn.Column(
+                        pn.pane.Markdown(
+                            """### Run \nHere's how you run."""
+                        ),
+                        pn.Row(
+                            pn.Column(self.return_config_dict),
+                            pn.Column(
+                                pn.Row(self.return_run_button, 
+                                       pn.Column(pn.Spacer(height=20),
+                                                 self.progress)
+                                      ),
+                                self.return_log_pane
+                                )
                         ),
                         name='Run'
                     ),
-                    pn.Tabs(
-                        pn.Column(
-                            'On this pane, set your output config and commit it to file.',
-                            pn.Row( 'Commit Settings to File: COMMIT BUTTON', 'PROGRESS BAR'),
-                            pn.Row(self.timeseries_control,
-                                   pn.WidgetBox('Save Rasters as: UM, M',
-                                               'Save arrays as: .npy, .mat, .ascii',
-                                                width=300
-                                               )
-                                  ),
-                            pn.WidgetBox(self.timeSeries_Plot, 
-                                         name='Timeseries Plot Preview', 
-                                         width=900
-                                        ),
-                            name = 'Commit',  width=900
+                    pn.Column(
+                        pn.pane.Markdown(
+                            """### Export \n Config your output, commit & review, then download."""
                         ),
-                        pn.Column('''
-                                    You can view the movies you've saved here.
-                                    There will be a fileselector.
-                                        - names of the folders will reflect model run, e.g. DATE20200613_RSB0300532
-                                    Inside the folder will be:
-                                        - a json config with the model settings
-                                        - the static timeseries plot
-                                        - the video of the time series plot with a vertical line marker,
-                                          and updating rasters along with updating timepoint
-                                        - the dataframe as csv: w/ columns for your selected curves
-                                        - sub directory of timeinvariant arrays, in {numpy, matlab, or ascii}
-                                            - 2D elevation, e.g. DATE20200613_RSB0300532_E.npy
-                                            - 2D slope, e.g. DATE20200613_RSB0300532_S.npy
-                                            - 2D aspect, e.g. DATE20200613_RSB0300532_A.npy
-                                        - sub directory of arrays, in {numpy, matlab, or ascii}
-                                            - subdirectory of masked elevation arrays
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_ME.npy
-                                            - subdirectory of masked slope arrays
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MS.npy
-                                            - subdirectory of masked aspect arrays
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MA.npy
-                                            - subdirectory of un-masked aspect arrays
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_UM.npy
-                                            - subdirectory of masked M arrays
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MM.npy
-                                            - subdirectory of masks
-                                                - one 2D array for each timepoint, e.g. DATE20200613_TIME0745_RSB0300532_MSK.npy
-                                  ''',
-                                  name='Review'
-                                 ),
-                        pn.Column('''
-                                    You can select directories from the fileselector, to download as zips
-                                  ''',
-                                  name='Download'
-                                 ),
-                        name = 'Export'
+                        pn.Tabs(
+                            pn.Column(
+                                'Heres the model',
+                                self.video,
+                                name='Review'
+                            ),
+                            pn.Column(
+                                '''Select which files you'd like, then download as zips''',
+                                self.filebrowser,
+                                name='Download'
+                            )
+                        ),
+                        name='Export'
                     ),
                     active=0,
                     tabs_location='left'
@@ -203,7 +188,10 @@ class DashLayout(dashcontrols.DashControls):
         return
         
     def dashboard(self):
-        self.set_json()
+        self.set_filename()
+        self.set_dataframe()
+        self.set_raster()
+        self.update_config()
         self.set_controls()
         self.set_layout()
         return pn.Column(self.function_row,

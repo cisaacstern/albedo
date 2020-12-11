@@ -1,14 +1,13 @@
-import _albedo.setframe as setframe
+import _albedo.setaxes as setaxes
 import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from datetime import timedelta
 
-class PlotMethods(setframe.SetFrame):
+class PlotMethods(setaxes.SetAxes):
     
-    @param.depends('run', 'modelComplete',
-                   'date', 'elev', 'azim', 'choose3d')
+    @param.depends('run', 'modelComplete', 'date', 'elev', 'choose3d')
     def axes3d(self, figsize=(6,6), topMargin=1.2, bottomMargin=0):
         if self.run==True and self.modelComplete == 'Incomplete':
             pass
@@ -18,8 +17,14 @@ class PlotMethods(setframe.SetFrame):
             ax = fig.add_subplot(111, projection='3d')
 
             if self.choose3d:
+                if 'Raw Lidar' in self.choose3d:
+                    xyz = self.datetime2xyz(choice='raw')
+                    Easting, Northing, Elevation = xyz[:,0], xyz[:,1], xyz[:,2]
+                    ax.scatter(Easting, Northing, Elevation,
+                               cmap='viridis', c=Elevation)
+                
                 if 'Pointcloud' in self.choose3d:
-                    xyz = self.datetime2xyz()
+                    xyz = self.datetime2xyz(choice='pointcloud')
                     Easting, Northing, Elevation = xyz[:,0], xyz[:,1], xyz[:,2]
                     ax.scatter(Easting, Northing, Elevation,
                                cmap='viridis', c=Elevation)
@@ -41,8 +46,8 @@ class PlotMethods(setframe.SetFrame):
             plt.close()
             return fig
     
-    @param.depends('run', 'modelComplete', 'date', 'time', 
-                   'resolution', 'sigma', 'vertEx', 'activateMask')
+    @param.depends('run', 'modelComplete', 'date', 'resolution', 'sigma', 
+                   'time', 'activateMask')
     def tryptich(self, figsize=(12,5), wspace=0.05, hspace=0, leftMargin=0.05, 
                  rightMargin=0.97, topMargin=0.79, bottomMargin=0.1):
         if self.run==True and self.modelComplete=='Incomplete':
@@ -135,24 +140,28 @@ class PlotMethods(setframe.SetFrame):
             xs, ys = np.deg2rad(xs), ys
             '''
             if self.bins != 'Max':
-                xs = [np.deg2rad(self.angle_dict[entry]) 
-                      for entry in df['bin_assignment']]
+                col = df['bin_assignment']
+                xs  = [np.deg2rad(self.angle_dict[entry]) for entry in col]
+                x   = np.deg2rad(self.angle_dict[col.iloc[self.time]])
             else:
-                xs = np.deg2rad(df['solarAzimuth'])
+                col = df['solarAzimuth']
+                xs  = np.deg2rad(col)
+                x   = np.deg2rad(col.iloc[self.time])
             
             ys = df['solarAltitude']
+            y  = df['solarAltitude'].iloc[self.time]
             
             ax.scatter(xs,ys, s=10, c='orange',alpha=0.5)
-
+            ax.scatter(x, y, s=500, c='gold',alpha=1)
+            '''
             x, y = (df['solarAzimuth'].iloc[self.time], 
                     df['solarAltitude'].iloc[self.time])
-            
+            '''
             self.dt_str = df['MeasDateTime'].iloc[self.time]
             line1=f'{self.dt_str} Sun Position'
-            line2=f'Azi, SZA={np.around((x,y),1)}, Bins={self.bins}'
+            line2=f'Azi, SZA={np.around((np.rad2deg(x),y),1)}, Bins={self.bins}'
             
-            x, y = np.deg2rad(x), y
-            ax.scatter(x,y, s=500, c='gold',alpha=1)
+            #x, y = np.deg2rad(x), y
             
             plt.subplots_adjust(top=topMargin, bottom=bottomMargin,
                                 left=leftMargin, right=rightMargin)
@@ -166,8 +175,8 @@ class PlotMethods(setframe.SetFrame):
 
             return fig
         
-    @param.depends('run', 'modelComplete', 'date', 'time', 
-                   'resolution', 'sigma', 'vertEx', 'activateMask')
+    @param.depends('run', 'modelComplete', 'date', 'resolution', 'sigma', 
+                   'time', 'activateMask')
     def diptych(self, figsize=(8.25,5), topMargin=0.85, bottomMargin=0.05,
                 leftMargin=0.095, rightMargin=0.95, wspace=0.1, hspace=0):
         '''

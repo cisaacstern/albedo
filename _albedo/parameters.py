@@ -11,7 +11,7 @@ class Parameters(dataset.DataSet):
     azim     = param.Integer(default=285, bounds=(0, 360), step=15)
 
     choose3d = param.ListSelector(default=['Pointcloud', 'Planar Fit'],
-                                  objects=['Pointcloud', 'Planar Fit'])
+                                  objects=['Raw Lidar','Pointcloud','Planar Fit'])
     
     resolution = param.Integer(default=30, bounds=(10, 300), step=10)
     sigma      = param.Number(0.5, bounds=(0, 3))

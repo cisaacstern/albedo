@@ -10,7 +10,7 @@ class GridData(pointdata.PointData):
         '''
         takes xyz pointcloud data, outputs nearestNeighbor interpolation
         '''
-        xyz = self.datetime2xyz()
+        xyz = self.datetime2xyz(choice='pointcloud')
         Easting, Northing, Elevation = xyz[:,0], xyz[:,1], xyz[:,2]
 
         xi = np.linspace(self.eastMin, self.eastMax, self.resolution)

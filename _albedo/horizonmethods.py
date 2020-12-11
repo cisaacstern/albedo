@@ -1,26 +1,29 @@
-import _albedo.timeseries as timeseries
+import _albedo.setframe as setframe
 from scipy import ndimage
 import numpy as np
 
-class HorizonMethods(timeseries.TimeSeries):
+class HorizonMethods(setframe.SetFrame):
     
     def rotate2azimuth(self):
         '''
         rotates an elevation raster so that North is re-referenced to be
-        facing the solar azimuth
+        facing the solar azimuth.
         '''
-        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.time]
-        elevGrid = self.elevRast
-        rotationAngle = -solarAzimuth
-        return ndimage.rotate(elevGrid, rotationAngle, reshape=True, 
+        df = self.dataframe
+        if self.bins != 'Max':
+            col = df['bin_assignment']
+            azimuth = self.angle_dict[col.iloc[self.time]]
+        else:
+            col = df['solarAzimuth']
+            azimuth = col.iloc[self.time]
+            
+        return ndimage.rotate(self.elevRast, angle=(-azimuth), reshape=True, 
                               order=0, mode='constant', cval=np.nan)
-    
+
     def fwdHorz2D(self):
         '''
-        elevG is the blurred *AND ROTATED* elevation grid
-
-        horzPt[] is an empty *2D array* to be filled with the horzPts for each cell in 
-        THE ROTATED elevation grid
+        elevG is the blurred *AND ROTATED* elevation grid. horzPt[] is an empty
+        *2D array* to be filled with the horzPts for each cell in THE ROTATED elevation grid
         the horzPt for a given elevG[i, k] is expressed as an index value of elevG[]
         '''
         def SLOPE2D(gzi, ii, jj, kk):
@@ -31,38 +34,29 @@ class HorizonMethods(timeseries.TimeSeries):
                 return (gzi[jj, kk] - gzi[ii, kk])/(jj-ii)
             else:
                 return 0
+        #beginning of the outer function    
         elevG = self.rotate2azimuth()
-        
         horzPt = np.zeros(elevG.shape, dtype=int)
-
         #nHorz is an integer value equal to the height of the array elevG[]
         nHorz = horzPt.shape[0]
-
         for k in range(0, nHorz - 1):
             horzPt[nHorz - 1, k] = nHorz - 1 #the first entry is its own horizon
-
             for i in range(nHorz - 2, -1, -1): #loop from next-to-end backward to beginning
                 j = i + 1
-
                 HorzJ = horzPt[j, k]
-
                 slopeItoJ = SLOPE2D(elevG,i,j,k)
-
                 slopeItoHorzJ = SLOPE2D(elevG,i,HorzJ,k)
-
                 while slopeItoJ < slopeItoHorzJ:
                     j = HorzJ
                     HorzJ = horzPt[j, k]
                     slopeItoJ = SLOPE2D(elevG,i,j,k)
                     slopeItoHorzJ = SLOPE2D(elevG,i,HorzJ,k)
-
                 if slopeItoJ>slopeItoHorzJ:
                     horzPt[i, k] = j
                 elif slopeItoJ == 0:
                     horzPt[i, k] = i
                 else:
                     horzPt[i, k] = HorzJ
-
         return elevG, horzPt
 
     def slope2horz(self):
@@ -73,6 +67,7 @@ class HorizonMethods(timeseries.TimeSeries):
         returns the elevation grid and a 'slope to horizon (radians)' array
         '''
         elevGrid, horzPt_array = self.fwdHorz2D()
+
         shape = elevGrid.shape
         hSlope_rad = np.zeros(shape)
         for k in range(0, shape[0]):
@@ -80,14 +75,34 @@ class HorizonMethods(timeseries.TimeSeries):
                 hSlope_rad[i,k] = np.arctan2(elevGrid[horzPt_array[i,k], k] - elevGrid[i,k], 
                                              ((0.01*horzPt_array[i,k]) - (0.01*i)))
         return elevGrid, hSlope_rad
-
+        
+    #Second set of functions---ALTITUDE DEPENDANT---begins here
+    def horizon_dispatch(self):
+        if self.bins != 'Max':
+            if self.run==True and self.modelComplete=='Incomplete':
+                col = self.dataframe['bin_assignment']                    
+                current_bin = col.iloc[self.time]
+                trigger_update = (True
+                                  if current_bin != col.iloc[self.time-1]
+                                  else False)
+                if trigger_update:
+                    self.horizon_package = self.slope2horz()
+                    return self.horizon_package
+                else:
+                    return self.horizon_package
+            else:
+                return self.slope2horz()
+        else:
+            return self.slope2horz()
+    
     def invisiblePoints(self):
         '''
         takes an elevation array, a 'slope to horizon (radians)' array,
         and a solar altitude as inputs,
         and returns a (TILTED) array of visible points
         '''
-        elevG, hSlope_rad = self.slope2horz()
+        #elevG, hSlope_rad = self.slope2horz()
+        elevG, hSlope_rad = self.horizon_dispatch()
         solar_altitude = self.dataframe['solarAltitude'].iloc[self.time]
         solar_altitude = np.deg2rad(90 - solar_altitude)
         shape = hSlope_rad.shape
@@ -100,9 +115,7 @@ class HorizonMethods(timeseries.TimeSeries):
                     shadeMask[i,k] = 0
                 else:
                     shadeMask[i,k] = -1
-        
-        #shadeMask[shadeMask == 0] = np.nan
-        
+                
         tiltedElevG = elevG
         tiltedMask = shadeMask
         return tiltedElevG, tiltedMask
@@ -124,15 +137,23 @@ class HorizonMethods(timeseries.TimeSeries):
         
         rotated_elevG, tiltedMask = self.invisiblePoints()
         dimLength = self.resolution
-        solarAzimuth = self.dataframe['solarAzimuth'].iloc[self.time]
         
-        rerotatedMask = ndimage.rotate(tiltedMask, solarAzimuth, 
-                                       reshape=True, order=0, mode='constant', cval=np.nan)
+        df = self.dataframe
+        if self.bins != 'Max':
+            col = df['bin_assignment']
+            azimuth = self.angle_dict[col.iloc[self.time]]
+        else:
+            col = df['solarAzimuth']
+            azimuth = col.iloc[self.time]
+        
+        rerotatedMask = ndimage.rotate(tiltedMask, angle=azimuth, reshape=True,
+                                       order=0, mode='constant', cval=np.nan)
+        
         rerotatedMask[np.isnan(rerotatedMask)] = 0
         rerotatedMask[rerotatedMask == 0.5] = 0
 
         #create a reference from the rotated elevation grid, and set nans to zeros
-        refExtents = ndimage.rotate(rotated_elevG, solarAzimuth, 
+        refExtents = ndimage.rotate(rotated_elevG, angle=azimuth, 
                                     reshape=True, order=0, mode='constant', cval=np.nan)
         refExtents[np.isnan(refExtents)] = 0
 

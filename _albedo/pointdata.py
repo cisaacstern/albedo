@@ -9,22 +9,27 @@ class PointData(parameters.Parameters):
     def set_filename(self):
         self.filename = self.pointclouds[self.date]
     
-    def datetime2xyz(self):
+    def datetime2xyz(self, choice):
         '''
         takes a filename, finds and imports corresponding pointcloud data
         '''
-        xyz = np.genfromtxt(fname=self.pointcloud_directory+'/'
-                            +self.filename, delimiter=',', skip_header=1)
+        if choice=='raw':
+            fn = self.filename[:-8]+'PC.csv'
+            xyz = np.genfromtxt(fname=self.raw_directory+'/'+fn, 
+                                delimiter=',', skip_header=1)
+        else:
+            xyz = np.genfromtxt(fname=self.pointcloud_directory+'/'
+                                +self.filename, delimiter=',', skip_header=1)
         
         Easting, Northing, Elevation = xyz[:,0], xyz[:,1], xyz[:,2]
         assert(not(np.any((Easting < self.eastMin)|(Easting > self.eastMax)))), 'Easting out of range.'
         assert(not(np.any((Northing < self.northMin)|(Northing > self.northMax)))), 'Northing out of range.'
-        assert(not(np.any((Elevation < 2941.977)|(Elevation > 2948.356)))), 'Elevation out of range.'
+        #assert(not(np.any((Elevation < 2941.977)|(Elevation > 2948.356)))), 'Elevation out of range.'
         
         return xyz
     
     def pFit(self):
-        xyz = self.datetime2xyz()
+        xyz = self.datetime2xyz(choice='pointcloud')
         x, y, z = xyz[:,0], xyz[:,1], xyz[:,2]
         
         data = np.c_[x,y,z]

@@ -1,8 +1,10 @@
 import _albedo.plotmethods as plotmethods
 import param
-import numpy as np
-import matplotlib.pyplot as plt
 import time
+import numpy as np
+#matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+#import matplotlib.animation as animation
 
 class RunModel(plotmethods.PlotMethods):
       
@@ -36,30 +38,35 @@ class RunModel(plotmethods.PlotMethods):
             
             #run log updates:
             k, v = list(self.dictionary.keys()), list(self.dictionary.values())
-            rk, rv = list(v[1].keys()), list(v[1].values())
-            ak, av = list(v[2].keys()), list(v[2].values())
-            self.log +=  f"""\nModel queued with config:
-            {k[0]}: {v[0]}
-            {k[1]}: {rk[0]}: {rv[0]}
-                    {rk[1]}: {rv[1]}
-                    {rk[2]}: {rv[2]}
-                    {rk[3]}: {rv[3]}
-            {k[2]}:{ak[0]}: {av[0]}
-            """
+            const_key, const_values = k[0], v[0]
+            config_key, config_values_dict = k[1], v[1]
+            config_value_keys = list(config_values_dict.keys())
+            config_value_vals = list(config_values_dict.values())
+
+            date_key, date_val = config_value_keys[0], config_value_vals[0]
+            raster_key, raster_vals = config_value_keys[1], config_value_vals[1]
+            xgeo_key, xgeo_val = config_value_keys[2], config_value_vals[2]
+            azi_key, azi_vals = config_value_keys[3], config_value_vals[3]
+            self.log += f"""\nModel queued with config:
+            {date_key}: {date_val}
+            {raster_key}: {raster_vals}
+            {xgeo_key}: {xgeo_val}
+            {azi_key}: {list(azi_vals.keys())[0]}: {list(azi_vals.values())[0][0]}\n"""
+            
             if self.bins != 'Max':
-                bins = av[1]
+                bins = list(azi_vals.values())[0][1]
                 vals = [str(np.around(val,1)) for val in bins]
                 vals = [' '+val if len(val)==4 else val for val in vals]
                 vals = ['  '+val if len(val)==3 else val for val in vals]
                 newline = "\n"
-                self.log += f"""{ak[1]}: {newline}"""
+                #print(f"""{ak[1]}: {newline}""")
                 cycles = int((len(bins))/8)*8
                 lines = ["            "+', '.join(vals[:8]) if c==0
                          else ', '.join(vals[c:c+8]) for c in range(0, cycles, 8)]
                 tabbed_newline = newline+"            "
-                self.log +=f"""{tabbed_newline.join(lines)}"""
+                self.log += f"""{tabbed_newline.join(lines)}"""
             else:
-                self.log +=f"""{ak[1]}: {av[1]}"""
+                pass
                     
             #runnnn!
             plt.close('all')                
@@ -96,43 +103,7 @@ class RunModel(plotmethods.PlotMethods):
             df.insert(11, 'raster_meanALPHA', meanAlpha_list)
             self.log += """\nAdded raster M and albedo to dataframe
             Running horizon model...
-            """
-            
-            #bin azimuths - generate a slope to horz reference set here
-            '''
-            gauss = dayList[3][:,:,1]
-            referenceGrids, maskWaypoints = [], []
-            '''
-            #bins          = np.linspace(0,360,self.bins,endpoint=True)
-            #aziVals       = df['solarAzimuth'].to_numpy(copy=True)
-            #binAssignment = np.digitize(aziVals, bins)
-            '''
-            uniqueBins    = np.unique(binAssignment)
-
-            aziStarter = bins[1]/2
-            binSize    = bins[1]
-            lastAzi    = 360 - aziStarter
-            binAzimuth = np.linspace(binStarter, lastAzi, self.bins-1, endpoint=True)
-            
-            for i in range(0,len(uniqueBins)):
-                aziBin = uniqueBins[i]
-                azi = binAzimuth[aziBin-1]
-                rotatedGrid = rotate2azimuth(azi, gauss)
-                hPointGrid = fwdHorz2D(rotatedGrid)
-                slope2horzGrid = slope2horz(rotatedGrid, hPointGrid)
-                referenceStack = np.dstack((rotatedGrid, hPointGrid, slope2horzGrid))
-                referenceGrids.append(referenceStack)
-            
-            slope2horz_refs = []
-            for index in range(ncols):
-                plt.close('all')
-                #trigger new raster set
-                #  NOTE: I believe this cannot be easily converted
-                #        to list comprehensions, given that it req-
-                #        uires triggering this 'cascade' of state 
-                #        rasters by indexing self.time parameter.
-                self.time = index
-            '''
+            """            
 
             maskedmeanM_list, viz_percent_list = [], []
             for index in range(ncols):
@@ -179,47 +150,15 @@ class RunModel(plotmethods.PlotMethods):
             end_t = time.time()
             run_t = np.around(end_t-start_t, 4)
             cell_t, ar_cs = np.around(run_t/ncols, 4), self.resolution**2
+            unique_bins = (len(np.unique(df['bin_assignment'])) 
+                           if self.bins!='Max' else ncols) 
+                           
+            
             self.log+=f"""<pre style="color:lime">\nModel completed in {run_t}s.
-            {cell_t}s/timepoint for array of {ar_cs} cells @ {ncols} timepoints.
+            {cell_t}s/timepoint for array of {ar_cs} cells @ {ncols} timepoints
+            binned as {unique_bins} azimuths.
             </pre>
             """
             self.modelComplete = 'Complete'
             return 
         
-    @param.depends('set_curve_filler')
-    def fill_between(self):
-        '''
-        fills between selected curves
-        '''
-        #fill between measured direct rad and rad_reconstruction
-        if 'Rad_Meas: Direct Downw' in self.chooseTimeSeries and 'IDR_Recon: Planar' in self.chooseTimeSeries:
-            if self.fill_True:
-                ax.fill_between(times, downDirect, radRecon_planarM, 
-                                where=(downDirect>radRecon_planarM),
-                                interpolate=True, color='orange', alpha=0.2)
-                ax.fill_between(times, downDirect, radRecon_planarM, 
-                                where=(downDirect<radRecon_planarM),
-                                interpolate=True, color='red', alpha=0.4)
-        pass
-    #TODO: define UI for this feature.
-    #perhaps, tabs for the "Select Curve" cross selector
-    #one cross selector to select base curve.
-    #then for "fill-to curve", another tab., where we are reminded of 
-    #the base curve via widget.link method i.e. "the base curve is {link.Crossselector.value}"
-    
-    def snapshots(self):
-        '''
-        for use in comparing different model setting to one-another.
-        by pressing 'take snapshot', the user saves the currently plotted 
-        masked_timeseries dataframe to the list of objects in a "my_snapshots"
-        ObjectSelector param. these snapshots can then be compared to eachother
-        by selecting from a multiple selector widget.
-        '''
-        pass
-    
-    def multiDay_snapshot(self):
-        '''
-        this extents snapshots to allow visualization of many days in series
-        perhaps will require a different window.
-        '''
-        pass
