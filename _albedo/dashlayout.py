@@ -14,6 +14,13 @@ class DashLayout(dashcontrols.DashControls):
         return html
     
     @param.depends('run_state')
+    def triptych_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            return self.triptych
+    
+    @param.depends('run_state')
     def dyptich_dispatch(self):
         if self.run_state == True:
             pass
@@ -26,6 +33,21 @@ class DashLayout(dashcontrols.DashControls):
             pass
         else:
             return self.polarAxes
+        
+    @param.depends('run_state')
+    def timeseries_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            return self.timeSeries_Plot
+            
+    @param.depends('run_state')
+    def video_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            vid_path = os.path.join(os.getcwd(), 'exports', 'animation.mp4')
+            return pn.pane.Video(vid_path, loop=False)
     
     @param.depends('date')
     def return_time_control(self):
@@ -33,7 +55,7 @@ class DashLayout(dashcontrols.DashControls):
                 self.param, parameters=['time'],
                 widgets={'time':{'widget_type': pn.widgets.DiscreteSlider, 
                                  'width': 180}},
-                         width=200, name='')
+                         width=200, name='Preview')
     
     @param.depends('dictionary')
     def return_config_dict(self):
@@ -96,22 +118,18 @@ class DashLayout(dashcontrols.DashControls):
             self.reset_run_state, self.update_config
         )
         self.config_accordion = pn.Tabs(
-            pn.Row(self.tryptich,
+            pn.Row(self.triptych_dispatch,
                    name='Raster Preview',
                    width=900
                   ),
             pn.Column(pn.Row(self.polar_dispatch, self.dyptich_dispatch),
-                      name='Azimuth/M Preview',
+                      name='Azimuth Preview',
                       width=900
                      )
         )
         self.filebrowser = pn.widgets.FileSelector(
             directory = os.path.join(os.getcwd(), 'exports'), 
             width=375, height=400
-        )
-        self.video = pn.pane.Video(
-            'https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_640_3MG.mp4',
-            width=525, height=400, loop=True
         )
         self.model_tabs = pn.Row(
             pn.Tabs(pn.pane.Markdown(self.return_README(),
@@ -131,30 +149,25 @@ class DashLayout(dashcontrols.DashControls):
                             ),
                             pn.Column(
                                 pn.Row(self.raster_control, self.azi_bins,
-                                       pn.WidgetBox(pn.Row(self.horizon_preview,
-                                                           self.return_time_control))
+                                       pn.WidgetBox(pn.Row(self.return_time_control,
+                                                           self.horizon_preview
+                                                          )
+                                                   )
                                       ),
                                 self.config_accordion,
                                 name='Raster & Azimuth'
                             ),
-                            pn.Tabs(
-                                pn.Column(
-                                    pn.Row('For arrays, choose npy mat or ascii'),
-                                    name='Filetypes'
-                                ),
-                                pn.Column(
-                                    pn.Row(self.timeseries_control),
-                                    pn.WidgetBox(self.timeSeries_Plot, 
-                                                 name='Timeseries Plot Preview', 
-                                                 width=900
-                                                ),
+                            pn.Column(
+                                pn.Row(self.timeseries_control),
+                                pn.WidgetBox(self.timeseries_dispatch, 
+                                             name='Timeseries Plot Preview', 
+                                             width=900
+                                            ),
                                     name='Timeseries'
-                                ),
-                                pn.Column(
-                                    pn.Row('Choose a layout for the video'),
-                                    name='Video Layout'
-                                ),
-                            name = 'Output',  width=900
+                            ),
+                            pn.Column(
+                                'Choose array format: .npy, .mat, .ascii',
+                                name='Format',  width=900
                             )
                         ),
                         name='Configure'
@@ -182,7 +195,7 @@ class DashLayout(dashcontrols.DashControls):
                         pn.Tabs(
                             pn.Column(
                                 'Heres the model',
-                                self.video,
+                                self.video_dispatch,
                                 name='Review'
                             ),
                             pn.Column(

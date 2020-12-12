@@ -7,7 +7,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
 import numpy as np
-from datetime import timedelta
+from datetime import datetime, timedelta
+
+import pandas as pd
 
 class PlotMethods(setaxes.SetAxes):
     
@@ -50,71 +52,74 @@ class PlotMethods(setaxes.SetAxes):
             plt.close()
             return fig
     
-    @param.depends('run', 'modelComplete', 'date', 'resolution', 'sigma', 
-                   'time', 'activateMask')
-    def tryptich(self, figsize=(12,5), wspace=0.05, hspace=0, leftMargin=0.05, 
+    @param.depends('date', 'resolution', 'sigma', 'time', 'activateMask')
+    def triptych(self, figsize=(12,5), wspace=0.05, hspace=0, leftMargin=0.05, 
                  rightMargin=0.97, topMargin=0.79, bottomMargin=0.1):
-        if self.run==True and self.modelComplete=='Incomplete':
-            pass
+        plt.close()
+        fig, ax = plt.subplots(1,3, figsize=figsize, dpi=300)
+        canvas = FigureCanvasAgg(fig)
+
+        ds = self.date_string
+        line2 = f'\nR, S ={(self.resolution,self.sigma)}'
+
+        titles = [f'{ds}: Elevation'+line2, f'{ds}: Slope'+line2,
+                  f'{ds}: Aspect (South=0, East +)'+line2]
+
+        if self.activateMask == 'Overlay':
+            imgs = [self.masked_elev, self.masked_slope, self.masked_aspect]
+        elif self.activateMask == 'Remove':
+            imgs = [self.elevRast, self.slopeRast, self.aspectRast]
+
+        cmaps = ['viridis', 'YlOrBr', 'hsv']
+        cmapRanges = [(np.min(self.elevRast), np.max(self.elevRast)),
+                      (np.min(self.slopeRast), np.max(self.slopeRast)),
+                      (-180, 180)]
+
+        ticks = np.linspace(0, self.resolution-1, 4)
+        xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
+                   str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
+        ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
+                   str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
+
+        ims = []
+        for i in range(3):
+            img, cmap = imgs[i], cmaps[i]
+            im = ax[i].imshow(img, origin='lower', cmap=cmap,
+                              vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
+            ims.append(im)
+            ax[i].set_xticks(ticks=ticks)
+            ax[i].set_xticklabels(labels=xlabels)
+            ax[i].set_yticks(ticks=ticks)
+            if i == 0:
+                ax[i].set_yticklabels(labels=ylabels)
+                ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
+            else:
+                ax[i].set_yticklabels(labels=[])
+            if i == 1:
+                ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
+            ax[i].set_aspect("equal")
+
+        plt.subplots_adjust(left=leftMargin, right=rightMargin,
+                            top=topMargin, bottom=bottomMargin,
+                            wspace=wspace, hspace=hspace)
+
+        for i in range(3):
+            p = ax[i].get_position().get_points().flatten()
+            ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
+            ax_cbar.set_title(titles[i], loc='left')
+            cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
+            if i == 2:
+                cbar_ticks = [-180, -135, -90, -45, 0, 45, 90, 135, 180]
+                cb.set_ticks(cbar_ticks)
+
+        if self.run_state == True:
+            canvas.draw() # Retrieve a view on the renderer buffer
+            buf = canvas.buffer_rgba()
+            X = np.asarray(buf) # convert to a NumPy array
+            plt.close()
+            return X
         else:
             plt.close()
-            fig, ax = plt.subplots(1,3, figsize=figsize)
-            
-            ds = self.date_string
-            line2 = f'\nR, S ={(self.resolution,self.sigma)}'
-
-            titles = [f'{ds}: Elevation'+line2, f'{ds}: Slope'+line2,
-                      f'{ds}: Aspect (South=0, East +)'+line2]
-            
-            if self.activateMask == 'Overlay':
-                imgs = [self.masked_elev, self.masked_slope, self.masked_aspect]
-            elif self.activateMask == 'Remove':
-                imgs = [self.elevRast, self.slopeRast, self.aspectRast]
-            
-            cmaps = ['viridis', 'YlOrBr', 'hsv']
-            cmapRanges = [(np.min(self.elevRast), np.max(self.elevRast)),
-                          (np.min(self.slopeRast), np.max(self.slopeRast)),
-                          (-180, 180)]
-            
-            ticks = np.linspace(0, self.resolution-1, 4)
-            xlabels = [str(self.eastMin)[-2:], str(self.eastMin+1)[-2:],
-                       str(self.eastMin+2)[-2:], str(self.eastMax)[-2:]]
-            ylabels = [str(self.northMin)[-2:], str(self.northMin+1)[-2:],
-                       str(self.northMin+2)[-2:], str(self.northMax)[-2:]]
-            
-            ims = []
-            for i in range(3):
-                img, cmap = imgs[i], cmaps[i]
-                im = ax[i].imshow(img, origin='lower', cmap=cmap,
-                                  vmin=cmapRanges[i][0], vmax=cmapRanges[i][1])
-                ims.append(im)
-                ax[i].set_xticks(ticks=ticks)
-                ax[i].set_xticklabels(labels=xlabels)
-                ax[i].set_yticks(ticks=ticks)
-                if i == 0:
-                    ax[i].set_yticklabels(labels=ylabels)
-                    ax[i].set_ylabel(f'Northing (+{str(self.northMin)[:-2]}e2)')
-                else:
-                    ax[i].set_yticklabels(labels=[])
-                if i == 1:
-                    ax[i].set_xlabel(f'Easting (+{str(self.eastMin)[:-2]}e2)')
-                ax[i].set_aspect("equal")
-
-            plt.subplots_adjust(left=leftMargin, right=rightMargin,
-                                top=topMargin, bottom=bottomMargin,
-                                wspace=wspace, hspace=hspace)
-            
-            for i in range(3):
-                p = ax[i].get_position().get_points().flatten()
-                ax_cbar = fig.add_axes([p[0], 0.85, p[2]-p[0], 0.05])
-                ax_cbar.set_title(titles[i], loc='left')
-                cb = plt.colorbar(ims[i], cax=ax_cbar, orientation='horizontal')
-                if i == 2:
-                    cbar_ticks = [-180, -135, -90, -45, 0, 45, 90, 135, 180]
-                    cb.set_ticks(cbar_ticks)
-            
-            plt.close()
-
             return fig
     
     @param.depends('date', 'time', 'bins')
@@ -124,7 +129,9 @@ class PlotMethods(setaxes.SetAxes):
         df = self.dataframe
 
         plt.close()
-        fig = plt.figure(figsize=figsize)
+        fig = plt.figure(figsize=figsize, dpi=300)
+        canvas = FigureCanvasAgg(fig)
+        
         ax = fig.add_subplot(111, projection='polar')
         ax.set_theta_zero_location('N')
         ax.set_xticks(([np.deg2rad(0), np.deg2rad(45), np.deg2rad(90),
@@ -165,9 +172,15 @@ class PlotMethods(setaxes.SetAxes):
         ax_cbar.set_title(line1+'\n'+line2, loc='left')
         ax_cbar.axis('off')
 
-        plt.close()
-
-        return fig
+        if self.run_state == True:
+            canvas.draw() # Retrieve a view on the renderer buffer
+            buf = canvas.buffer_rgba()
+            X = np.asarray(buf) # convert to a NumPy array
+            plt.close()
+            return X
+        else:
+            plt.close()
+            return fig
         
     @param.depends('date', 'resolution', 'sigma', 'time', 'activateMask')
     def diptych(self, figsize=(8.25,5), topMargin=0.85, bottomMargin=0.05,
@@ -230,122 +243,119 @@ class PlotMethods(setaxes.SetAxes):
             if i == 1:
                 cb.set_ticks([0, 1])
                 cb.set_ticklabels("Visible", "Shaded")
-                
-        # Retrieve a view on the renderer buffer
-        canvas.draw()
-        buf = canvas.buffer_rgba()
-        # convert to a NumPy array
-        X = np.asarray(buf)
-
-        plt.close()
         
         if self.run_state == True:
+            canvas.draw() # Retrieve a view on the renderer buffer
+            buf = canvas.buffer_rgba()
+            X = np.asarray(buf) # convert to a NumPy array
+            plt.close()
             return X
         else:
+            plt.close()
             return fig
         
-    @param.depends('modelComplete', 'date', 'set_measurements', 
+    @param.depends('set_measurements', 
                    'set_planar_curves', 'set_raster_curves', 
                    'set_horizon_curves', 'set_visibile_curve')
     def timeSeries_Plot(self):
         '''
         plots a time series, given set of times and a tuple of y's.
         '''
-        if self.modelComplete == 'Incomplete':
+        plt.close()
+        #figure and three axes
+        fig, ax_rad = self.fig, self.ax
+        
+        canvas = FigureCanvasAgg(fig)
+        
+        ax_m, ax_alpha, ax_viz = self.par1, self.par2, self.par3
+
+        #setting up the plot title
+        t_dict = self.param.time.names
+        sunrise_sunset = f'({list(t_dict)[0]}-{list(t_dict)[-1]})'
+        line1 = f'{self.date_string} {sunrise_sunset};'
+        line2 = f' R, S, B={[self.resolution,self.sigma,self.bins]}'
+        title = line1+line2
+        ax_rad.set_title(title, loc='left', fontsize=12)
+
+        #x-axis vals (in UTC) & labels (in PT)
+        df = pd.read_csv('exports/model_dataframe.csv')
+        times = [
+            datetime.strptime(string[:-6], '%Y-%m-%d %H:%M:%S') - timedelta(hours=self.UTC_offset)
+            for string in df['UTC_datetime']
+        ]
+        time_labels = [string[-14:-9] for string in df['UTC_datetime']]
+        time_labels[0] = ''
+        ax_rad.set_xticks(times[::4])
+        ax_rad.set_xticklabels(time_labels[::4])
+
+        #assigning curve values
+        cols = df.columns
+        vals = [
+            tuple(df[next(col for col in cols if col.startswith('downward looking'))]),
+            tuple(df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
+            tuple(df[next(col for col in cols if col.startswith('upward looking solar'))] 
+                  - df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
+            tuple(df['M_planar']),
+            tuple(df['Albedo_planar']),
+            tuple(df['raster_meanM']),
+            tuple(df['raster_meanALPHA']),
+            tuple(df['maskedmeanM']),
+            tuple(df['maskedAlbedo']),
+            tuple(df['viz_percent'])
+        ]
+        #variable assignment
+        (globalup, diffusedwn, directdwn, M_planar, Albedo_planar, 
+         raster_meanM, raster_meanALPHA, maskedmeanM, maskedAlbedo, 
+         viz_percent) = vals    
+
+        #measurements
+        m = {
+            'Global Up': [globalup, 'orange'],
+            'Direct Dwn': [directdwn, 'salmon'],
+            'Diffuse Dwn': [diffusedwn, 'peachpuff']
+        }
+
+        #products
+        p = {'M':[M_planar,'solid'],     'Alpha':[Albedo_planar,'solid'],    'IDR':['planarIDR','green']}
+        r = {'M':[raster_meanM,'dashed'],'Alpha':[raster_meanALPHA,'dashed'],'IDR':["rIDR_data",'dgreen']}
+        h = {'M':[maskedmeanM,'dotted'],'Alpha':[maskedAlbedo,'dotted'],   'IDR':["hIDR_data",'ddgreen']}
+        v = {'v':[viz_percent, 'k']}
+
+        #unification
+        plot = {
+            **{m[pick][0]:[m[pick][1],'raw'] 
+               for pick in self.set_measurements},
+            **{p[pick][0]:[p[pick][1], pick] 
+               for pick in self.set_planar_curves},
+            **{r[pick][0]:[r[pick][1], pick] 
+               for pick in self.set_raster_curves},
+            **{h[pick][0]:[h[pick][1], pick] 
+               for pick in self.set_horizon_curves},
+            **{v['v'][0]:[v['v'][1], 'viz']}
+        } 
+
+        #plot
+        for data, metadata in zip(plot.keys(), plot.values()):
+            ax_rad.plot(times, np.zeros((len(times))), alpha=0) #time4host
+            if metadata[1] in ('raw', 'IDR'):
+                ax_rad.plot(times, data, c=metadata[0])
+            elif metadata[1] == 'M':
+                ax_m.plot(times, data, ls=metadata[0], c='mediumorchid')
+            elif metadata[1] == 'Alpha':
+                ax_alpha.plot(times, data, ls=metadata[0], c='darkturquoise')
+            elif metadata[1] == 'viz':
+                if self.set_visibile_curve:
+                    ax_viz.plot(times, data, c=metadata[0], alpha=0.5)
+            else:
+                raise KeyError('Plot data|metadata error.')
+
+        if self.run_state == True:
+            canvas.draw() # Retrieve a view on the renderer buffer
+            buf = canvas.buffer_rgba()
+            X = np.asarray(buf) # convert to a NumPy array
             plt.close()
-            fig, ax = self.fig, self.ax
-            title = 'YYYY:MM:DD (sunrise - sunset); R, S, B= []'
-            ax.set_title(title, loc='left')
-            ax.text(x=-0.04, y=800, s="Current configuration not yet run.", 
-                    fontsize=16)
-            ax.text(x=-0.04, y=600, s="Run model to generate curves.", 
-                    fontsize=30)
-            plt.close()
-            return fig
+            return X
         else:
             plt.close()
-            #figure and three axes
-            fig, ax_rad = self.fig, self.ax
-            ax_m, ax_alpha, ax_viz = self.par1, self.par2, self.par3
-            
-            #setting up the plot title
-            t_dict = self.param.time.names
-            sunrise_sunset = f'({list(t_dict)[0]}-{list(t_dict)[-1]})'
-            line1 = f'{self.date_string} {sunrise_sunset};'
-            line2 = f' R, S, B={[self.resolution,self.sigma,self.bins]}'
-            title = line1+line2
-            ax_rad.set_title(title, loc='left', fontsize=12)
-            
-            #x-axis vals (in UTC) & labels (in PT)
-            df = self.model_dataframe
-            times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
-            time_labels = [t.strftime("%H:%M") for t in times]
-            time_labels[0] = ''
-            ax_rad.set_xticks(times[::4])
-            ax_rad.set_xticklabels(time_labels[::4])
-            
-            #assigning curve values
-            cols = df.columns
-            vals = [
-                tuple(df[next(col for col in cols if col.startswith('downward looking'))]),
-                tuple(df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
-                tuple(df[next(col for col in cols if col.startswith('upward looking solar'))] 
-                      - df[next(col for col in cols if col.startswith('upward looking diffuse'))]),
-                tuple(df['M_planar']),
-                tuple(df['Albedo_planar']),
-                tuple(df['raster_meanM']),
-                tuple(df['raster_meanALPHA']),
-                tuple(df['maskedmeanM']),
-                tuple(df['maskedAlbedo']),
-                tuple(df['viz_percent'])
-            ]
-            #variable assignment
-            (globalup, diffusedwn, directdwn, M_planar, Albedo_planar, 
-             raster_meanM, raster_meanALPHA, maskedmeanM, maskedAlbedo, 
-             viz_percent) = vals    
-            
-            #measurements
-            m = {
-                'Global Up': [globalup, 'orange'],
-                'Direct Dwn': [directdwn, 'salmon'],
-                'Diffuse Dwn': [diffusedwn, 'peachpuff']
-            }
-            
-            #products
-            p = {'M':[M_planar,'solid'],     'Alpha':[Albedo_planar,'solid'],    'IDR':['planarIDR','green']}
-            r = {'M':[raster_meanM,'dashed'],'Alpha':[raster_meanALPHA,'dashed'],'IDR':["rIDR_data",'dgreen']}
-            h = {'M':[maskedmeanM,'dotted'],'Alpha':[maskedAlbedo,'dotted'],   'IDR':["hIDR_data",'ddgreen']}
-            v = {'v':[viz_percent, 'k']}
-
-            #unification
-            plot = {
-                **{m[pick][0]:[m[pick][1],'raw'] 
-                   for pick in self.set_measurements},
-                **{p[pick][0]:[p[pick][1], pick] 
-                   for pick in self.set_planar_curves},
-                **{r[pick][0]:[r[pick][1], pick] 
-                   for pick in self.set_raster_curves},
-                **{h[pick][0]:[h[pick][1], pick] 
-                   for pick in self.set_horizon_curves},
-                **{v['v'][0]:[v['v'][1], 'viz']}
-            } 
-                                    
-            #plot
-            for data, metadata in zip(plot.keys(), plot.values()):
-                ax_rad.plot(times, np.zeros((len(times))), alpha=0) #time4host
-                if metadata[1] in ('raw', 'IDR'):
-                    ax_rad.plot(times, data, c=metadata[0])
-                elif metadata[1] == 'M':
-                    ax_m.plot(times, data, ls=metadata[0], c='mediumorchid')
-                elif metadata[1] == 'Alpha':
-                    ax_alpha.plot(times, data, ls=metadata[0], c='darkturquoise')
-                elif metadata[1] == 'viz':
-                    if self.set_visibile_curve:
-                        ax_viz.plot(times, data, c=metadata[0], alpha=0.5)
-                else:
-                    raise KeyError('Plot data|metadata error.')
-                    
-            plt.close()
-
             return fig
         

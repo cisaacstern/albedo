@@ -110,7 +110,7 @@ class RunModel(plotmethods.PlotMethods):
 
             maskedmeanM_list, viz_percent_list = [], []
             
-            self.diptychs = []
+            self.img_arrays = []
             
             for index in range(ncols):
                 plt.close('all')
@@ -130,11 +130,19 @@ class RunModel(plotmethods.PlotMethods):
                 viz_percent_list.append(vp)
                 
                 ####MOVIE MADNESS#####
-                #save a diptych
-                #artists = self.diptych().get_children()
-                #diptychs.append(artists[1:])
-                img_array = self.diptych()
-                self.diptychs.append(img_array)
+                
+                t_arr, p_arr, d_arr = (self.triptych(), 
+                                       self.polarAxes(),
+                                       self.diptych())
+                lower_set = np.hstack((t_arr, p_arr, d_arr))
+                ts_array = self.timeSeries_Plot()
+                img_array = np.vstack((ts_array, lower_set))
+                
+                self.img_arrays.append(img_array)
+                
+                if index == 0:
+                    print('ts_array shape is ', ts_array.shape)
+                    print('img_array shape is ', img_array.shape)
                     
                 #calc masked M
                 m = self.M_calculation(df, row=index, choice='masked')
@@ -147,14 +155,13 @@ class RunModel(plotmethods.PlotMethods):
             
             ####MOVIE MADNESS#####
             # Set up formatting for the movie files
-            fig2 = plt.figure(tight_layout=True, dpi=300)
+            fig2 = plt.figure(tight_layout=True, dpi=100)
             plt.axis('off')
-            #plt.tight_layout()
-            ims = [(plt.imshow(img),) for img in self.diptychs]
+            ims = [(plt.imshow(img),) for img in self.img_arrays]
             Writer = animation.writers['ffmpeg']
-            writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+            writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
             im_ani = animation.ArtistAnimation(fig2, ims, interval=200, repeat_delay=3000, blit=False)
-            im_ani.save('exports/diptych.mp4', writer=writer)
+            im_ani.save('exports/animation.mp4', writer=writer)
             ####END MOVIE MADNESS#####
             
             df.insert(12, 'maskedmeanM', maskedmeanM_list)

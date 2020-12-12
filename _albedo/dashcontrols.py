@@ -45,7 +45,7 @@ class DashControls(runmodel.RunModel):
             self.param, parameters=['activateMask'],
             widgets={'activateMask':{'widget_type': pn.widgets.RadioBoxGroup,
                                      'inline': False}}, 
-            name='Preview', width=105
+            name='Shadows', width=105
         )
         m = pn.Param(
             self.param, parameters=['set_measurements'], 
