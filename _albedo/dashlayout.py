@@ -33,13 +33,6 @@ class DashLayout(dashcontrols.DashControls):
             pass
         else:
             return self.polarAxes
-        
-    @param.depends('run_state')
-    def timeseries_dispatch(self):
-        if self.run_state == True:
-            pass
-        else:
-            return self.timeSeries_Plot
             
     @param.depends('run_state')
     def video_dispatch(self):
@@ -108,9 +101,7 @@ class DashLayout(dashcontrols.DashControls):
             return enabled
         elif self.modelComplete == 'Complete':
             return disabled
-        
-    @param.depends('')
-    
+            
     def set_layout(self):
         self.function_row = pn.Row(
             self.set_filename, self.set_dataframe, self.set_raster,
@@ -149,21 +140,15 @@ class DashLayout(dashcontrols.DashControls):
                             ),
                             pn.Column(
                                 pn.Row(self.raster_control, self.azi_bins,
-                                       pn.WidgetBox(pn.Row(self.return_time_control,
-                                                           self.horizon_preview
-                                                          )
-                                                   )
+                                       pn.WidgetBox(self.horizon_preview),
+                                       pn.WidgetBox(self.return_time_control)
                                       ),
                                 self.config_accordion,
                                 name='Raster & Azimuth'
                             ),
                             pn.Column(
-                                pn.Row(self.timeseries_control),
-                                pn.WidgetBox(self.timeseries_dispatch, 
-                                             name='Timeseries Plot Preview', 
-                                             width=900
-                                            ),
-                                    name='Timeseries'
+                                self.timeseries_control,
+                                name='Timeseries'
                             ),
                             pn.Column(
                                 'Choose array format: .npy, .mat, .ascii',

@@ -4,13 +4,13 @@ from mpl_toolkits.axes_grid1 import host_subplot
 from mpl_toolkits import axisartist    
 
 class SetAxes(setrasters.SetRasters):    
-    def set_axes(self, figsize=(23.75,6.33), topMargin=0.9, 
-                    bottomMargin=0.1, leftMargin=0.05, rightMargin=0.645):
+    def set_axes(self, figsize=(23.75,10), topMargin=0.9, 
+                    bottomMargin=0.1, leftMargin=0.05, rightMargin=0.9):
             '''
             instantiates the axes for the timeSeries_Plot.
             broken into a separate function to reduce the line count for timeSeries_Plot
             '''
-            fig = plt.figure(figsize=figsize, dpi=300)
+            fig = plt.figure(figsize=figsize, dpi=self.dpi)
             ax = host_subplot(111, axes_class=axisartist.Axes)
             
             par1 = ax.twinx()

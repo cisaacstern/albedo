@@ -56,7 +56,7 @@ class PlotMethods(setaxes.SetAxes):
     def triptych(self, figsize=(12,5), wspace=0.05, hspace=0, leftMargin=0.05, 
                  rightMargin=0.97, topMargin=0.79, bottomMargin=0.1):
         plt.close()
-        fig, ax = plt.subplots(1,3, figsize=figsize, dpi=300)
+        fig, ax = plt.subplots(1,3, figsize=figsize, dpi=self.dpi)
         canvas = FigureCanvasAgg(fig)
 
         ds = self.date_string
@@ -129,7 +129,7 @@ class PlotMethods(setaxes.SetAxes):
         df = self.dataframe
 
         plt.close()
-        fig = plt.figure(figsize=figsize, dpi=300)
+        fig = plt.figure(figsize=figsize, dpi=self.dpi)
         canvas = FigureCanvasAgg(fig)
         
         ax = fig.add_subplot(111, projection='polar')
@@ -190,7 +190,7 @@ class PlotMethods(setaxes.SetAxes):
         the direct rad shade mask for the given date & time
         '''
         plt.close()
-        fig, ax = plt.subplots(1,2, figsize=figsize, dpi=300)
+        fig, ax = plt.subplots(1,2, figsize=figsize, dpi=self.dpi)
         
         canvas = FigureCanvasAgg(fig)
 
@@ -254,10 +254,7 @@ class PlotMethods(setaxes.SetAxes):
             plt.close()
             return fig
         
-    @param.depends('set_measurements', 
-                   'set_planar_curves', 'set_raster_curves', 
-                   'set_horizon_curves', 'set_visibile_curve')
-    def timeSeries_Plot(self):
+    def timeSeries_Plot(self, df, mx):
         '''
         plots a time series, given set of times and a tuple of y's.
         '''
@@ -278,12 +275,8 @@ class PlotMethods(setaxes.SetAxes):
         ax_rad.set_title(title, loc='left', fontsize=12)
 
         #x-axis vals (in UTC) & labels (in PT)
-        df = pd.read_csv('exports/model_dataframe.csv')
-        times = [
-            datetime.strptime(string[:-6], '%Y-%m-%d %H:%M:%S') - timedelta(hours=self.UTC_offset)
-            for string in df['UTC_datetime']
-        ]
-        time_labels = [string[-14:-9] for string in df['UTC_datetime']]
+        times = df['UTC_datetime'] - timedelta(hours=self.UTC_offset)
+        time_labels = [t.strftime("%H:%M") for t in times]
         time_labels[0] = ''
         ax_rad.set_xticks(times[::4])
         ax_rad.set_xticklabels(time_labels[::4])
@@ -338,14 +331,14 @@ class PlotMethods(setaxes.SetAxes):
         for data, metadata in zip(plot.keys(), plot.values()):
             ax_rad.plot(times, np.zeros((len(times))), alpha=0) #time4host
             if metadata[1] in ('raw', 'IDR'):
-                ax_rad.plot(times, data, c=metadata[0])
+                ax_rad.plot(times[:mx], data[:mx], c=metadata[0])
             elif metadata[1] == 'M':
-                ax_m.plot(times, data, ls=metadata[0], c='mediumorchid')
+                ax_m.plot(times[:mx], data[:mx], ls=metadata[0], c='mediumorchid')
             elif metadata[1] == 'Alpha':
-                ax_alpha.plot(times, data, ls=metadata[0], c='darkturquoise')
+                ax_alpha.plot(times[:mx], data[:mx], ls=metadata[0], c='darkturquoise')
             elif metadata[1] == 'viz':
                 if self.set_visibile_curve:
-                    ax_viz.plot(times, data, c=metadata[0], alpha=0.5)
+                    ax_viz.plot(times[:mx], data[:mx], c=metadata[0], alpha=0.5)
             else:
                 raise KeyError('Plot data|metadata error.')
 

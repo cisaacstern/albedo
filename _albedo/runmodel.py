@@ -31,46 +31,52 @@ class RunModel(plotmethods.PlotMethods):
 
             return D_up/((c*B_down)+D_down)
         
+    
+    def update_run_log(self):
+        '''
+        
+        '''
+        k, v = list(self.dictionary.keys()), list(self.dictionary.values())
+        const_key, const_values = k[0], v[0]
+        config_key, config_values_dict = k[1], v[1]
+        config_value_keys = list(config_values_dict.keys())
+        config_value_vals = list(config_values_dict.values())
+
+        date_key, date_val = config_value_keys[0], config_value_vals[0]
+        raster_key, raster_vals = config_value_keys[1], config_value_vals[1]
+        xgeo_key, xgeo_val = config_value_keys[2], config_value_vals[2]
+        azi_key, azi_vals = config_value_keys[3], config_value_vals[3]
+        self.log += f"""\nModel queued with config:
+        {date_key}: {date_val}
+        {raster_key}: {raster_vals}
+        {xgeo_key}: {xgeo_val}
+        {azi_key}: {list(azi_vals.keys())[0]}: {list(azi_vals.values())[0][0]}\n"""
+
+        if self.bins != 'Max':
+            bins = list(azi_vals.values())[0][1]
+            vals = [str(np.around(val,1)) for val in bins]
+            vals = [' '+val if len(val)==4 else val for val in vals]
+            vals = ['  '+val if len(val)==3 else val for val in vals]
+            newline = "\n"
+            cycles = int((len(bins))/8)*8
+            lines = ["            "+', '.join(vals[:8]) if c==0
+                     else ', '.join(vals[c:c+8]) for c in range(0, cycles, 8)]
+            tabbed_newline = newline+"            "
+            self.log += f"""{tabbed_newline.join(lines)}"""
+        else:
+            pass
+        
+        return
+    
     @param.depends('run')
-    def run_model(self): #formerly, calc_maskedmeanM_list
+    def run_model(self): 
         if self.run == False:
             pass
         elif self.run == True:
             self.run_state = True
             start_t = time.time()
+            self.update_run_log()
             
-            #run log updates:
-            k, v = list(self.dictionary.keys()), list(self.dictionary.values())
-            const_key, const_values = k[0], v[0]
-            config_key, config_values_dict = k[1], v[1]
-            config_value_keys = list(config_values_dict.keys())
-            config_value_vals = list(config_values_dict.values())
-
-            date_key, date_val = config_value_keys[0], config_value_vals[0]
-            raster_key, raster_vals = config_value_keys[1], config_value_vals[1]
-            xgeo_key, xgeo_val = config_value_keys[2], config_value_vals[2]
-            azi_key, azi_vals = config_value_keys[3], config_value_vals[3]
-            self.log += f"""\nModel queued with config:
-            {date_key}: {date_val}
-            {raster_key}: {raster_vals}
-            {xgeo_key}: {xgeo_val}
-            {azi_key}: {list(azi_vals.keys())[0]}: {list(azi_vals.values())[0][0]}\n"""
-            
-            if self.bins != 'Max':
-                bins = list(azi_vals.values())[0][1]
-                vals = [str(np.around(val,1)) for val in bins]
-                vals = [' '+val if len(val)==4 else val for val in vals]
-                vals = ['  '+val if len(val)==3 else val for val in vals]
-                newline = "\n"
-                #print(f"""{ak[1]}: {newline}""")
-                cycles = int((len(bins))/8)*8
-                lines = ["            "+', '.join(vals[:8]) if c==0
-                         else ', '.join(vals[c:c+8]) for c in range(0, cycles, 8)]
-                tabbed_newline = newline+"            "
-                self.log += f"""{tabbed_newline.join(lines)}"""
-            else:
-                pass
-                    
             #runnnn!
             plt.close('all')                
             df = self.dataframe.copy(deep=True)
@@ -78,27 +84,22 @@ class RunModel(plotmethods.PlotMethods):
             self.progress.max = ncols-1
             self.log += '\nCopied dataframe'
             
-            #PLANAR M
+            #PLANAR M + ALBEDO
             self.p_slope, self.p_aspect = self.planar_slope_aspect()
             Mp_list = [self.M_calculation(df, row, choice='planar') 
                        for row in range(ncols)]
             df.insert(8, 'M_planar', Mp_list)
-
-            #PLANAR ALBEDO
             Ap_list = [self.albedo(df, row, choice='planar')
                        for row in range(ncols)]
             df.insert(9, 'Albedo_planar', Ap_list)
             self.log += '\nAdded planar M and albedo to dataframe'
 
-            #RASTER meanM
+            #RASTER meanM and RASTER_mean_ALPHA
             meanM_list = [
-                np.mean(
-                    self.M_calculation(df=df, row=row, choice='raster')
-                ) for row in range(ncols)
+                np.mean(self.M_calculation(df=df, row=row, choice='raster')) 
+                for row in range(ncols)
             ]
             df.insert(10, 'raster_meanM', meanM_list)
-
-            #RASTER_mean_ALPHA
             meanAlpha_list = [
                 self.albedo(df, row, choice = 'raster') 
                 for row in range(ncols)
@@ -109,7 +110,6 @@ class RunModel(plotmethods.PlotMethods):
             """            
 
             maskedmeanM_list, viz_percent_list = [], []
-            
             self.img_arrays = []
             
             for index in range(ncols):
@@ -130,20 +130,12 @@ class RunModel(plotmethods.PlotMethods):
                 viz_percent_list.append(vp)
                 
                 ####MOVIE MADNESS#####
-                
                 t_arr, p_arr, d_arr = (self.triptych(), 
                                        self.polarAxes(),
                                        self.diptych())
                 lower_set = np.hstack((t_arr, p_arr, d_arr))
-                ts_array = self.timeSeries_Plot()
-                img_array = np.vstack((ts_array, lower_set))
-                
-                self.img_arrays.append(img_array)
-                
-                if index == 0:
-                    print('ts_array shape is ', ts_array.shape)
-                    print('img_array shape is ', img_array.shape)
-                    
+                self.img_arrays.append(lower_set)
+                print('lower_set append complete')    
                 #calc masked M
                 m = self.M_calculation(df, row=index, choice='masked')
                 maskedmeanM = np.mean(m)
@@ -151,11 +143,28 @@ class RunModel(plotmethods.PlotMethods):
                 #update progress bar
                 self.progress.value = self.time
             
-            self.log += 'Writing mp4...'
+            self.log+='\nAdding horizon M/albedo, and viz% to dataframe...'
+
+            df.insert(12, 'maskedmeanM', maskedmeanM_list)
+            maskedAlbedo_list = [
+                self.albedo(df, row, choice = 'masked')
+                for row in range(ncols)
+            ]
+            df.insert(13, 'maskedAlbedo', maskedAlbedo_list) 
+            viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
+            df.insert(14, 'viz_percent', viz_percent_list)
+              
+            self.log += '\nBuilding mp4 frames...'
+            #ts_array = self.timeSeries_Plot(df)
+            self.img_arrays = [
+                np.vstack((self.timeSeries_Plot(df, mx), lower_set))
+                for mx, lower_set in enumerate(self.img_arrays, start=1)
+            ]
             
+            self.log += '\nWriting mp4...'
             ####MOVIE MADNESS#####
             # Set up formatting for the movie files
-            fig2 = plt.figure(tight_layout=True, dpi=100)
+            fig2 = plt.figure(tight_layout=True, dpi=self.dpi)
             plt.axis('off')
             ims = [(plt.imshow(img),) for img in self.img_arrays]
             Writer = animation.writers['ffmpeg']
@@ -164,22 +173,13 @@ class RunModel(plotmethods.PlotMethods):
             im_ani.save('exports/animation.mp4', writer=writer)
             ####END MOVIE MADNESS#####
             
-            df.insert(12, 'maskedmeanM', maskedmeanM_list)
-            
-            maskedAlbedo_list = [
-                self.albedo(df, row, choice = 'masked')
-                for row in range(ncols)
-            ]
-            df.insert(13, 'maskedAlbedo', maskedAlbedo_list)
-            
-            viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
-            
-            df.insert(14, 'viz_percent', viz_percent_list)
+            self.log += 'Writing model_dataframe.csv to file...'
+            df.to_csv(r'exports/model_dataframe.csv')
             
             del (Mp_list, Ap_list, meanM_list, meanAlpha_list, 
-                 maskedmeanM_list, maskedAlbedo_list, viz_percent_list)
+                 maskedmeanM_list, maskedAlbedo_list, viz_percent_list, 
+                 self.img_arrays)
 
-            self.log+='\nAdded horizon M, horizon albedo, and viz% to dataframe'
             self.time = 0
             self.model_dataframe = df
             end_t = time.time()

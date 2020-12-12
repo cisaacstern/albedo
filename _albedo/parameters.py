@@ -50,3 +50,5 @@ class Parameters(dataset.DataSet):
                                          objects=["Incomplete", "Complete"])
     
     dictionary = param.Dict(default={"default": "dictionary"})
+    
+    dpi = param.Integer(50)
