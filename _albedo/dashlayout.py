@@ -41,6 +41,15 @@ class DashLayout(dashcontrols.DashControls):
         else:
             vid_path = os.path.join(os.getcwd(), 'exports', 'animation.mp4')
             return pn.pane.Video(vid_path, loop=False)
+        
+    @param.depends('run_state')
+    def download_dispatch(self):
+        if self.run_state == True:
+            pass
+        else:
+            return pn.widgets.FileDownload(
+                file='exports/animation.mp4',button_type='default',auto=False,
+                embed=True)
     
     @param.depends('date')
     def return_time_control(self):
@@ -108,20 +117,6 @@ class DashLayout(dashcontrols.DashControls):
             self.set_axes, self.set_m, self.set_masks, self.run_model, 
             self.reset_run_state, self.update_config
         )
-        self.config_accordion = pn.Tabs(
-            pn.Row(self.triptych_dispatch,
-                   name='Raster Preview',
-                   width=900
-                  ),
-            pn.Column(pn.Row(self.polar_dispatch, self.dyptich_dispatch),
-                      name='Azimuth Preview',
-                      width=900
-                     )
-        )
-        self.filebrowser = pn.widgets.FileSelector(
-            directory = os.path.join(os.getcwd(), 'exports'), 
-            width=375, height=400
-        )
         self.model_tabs = pn.Row(
             pn.Tabs(pn.pane.Markdown(self.return_README(),
                         name='README'
@@ -143,7 +138,16 @@ class DashLayout(dashcontrols.DashControls):
                                        pn.WidgetBox(self.horizon_preview),
                                        pn.WidgetBox(self.return_time_control)
                                       ),
-                                self.config_accordion,
+                                pn.Tabs(
+                                    pn.Row(self.triptych_dispatch,
+                                           name='Raster Preview',
+                                           width=900
+                                          ),
+                                    pn.Column(pn.Row(self.polar_dispatch, self.dyptich_dispatch),
+                                              name='Azimuth Preview',
+                                              width=900
+                                             )
+                                ),
                                 name='Raster & Azimuth'
                             ),
                             pn.Column(
@@ -184,9 +188,43 @@ class DashLayout(dashcontrols.DashControls):
                                 name='Review'
                             ),
                             pn.Column(
-                                '''Select which files you'd like, then download as zips''',
-                                self.filebrowser,
-                                name='Download'
+                                '''Download zip''',
+                                self.download_dispatch,
+                                pn.pane.HTML(
+                                f'''<pre>
+                                %Y%M%D_%R%S%B/
+                                +--build_log.txt
+                                +--animation.mp4
+                                +--dataframe.csv
+                                +--pointclouds/
+                                |  +--raw.csv
+                                |  +--snowsurface.csv
+                                |  +--planarfit.csv
+                                +--arrays/
+                                    +--time_invariant/
+                                    |  +--elevation
+                                    |  +--slope
+                                    |  +--aspect
+                                    +--time_dependant/
+                                       +--elevation/
+                                       |  +--
+                                       |  ...
+                                       |  +--N
+                                       +--slope/
+                                       |  +--
+                                       |  ...
+                                       |  +--N
+                                       +--aspect/
+                                       |  +--
+                                       |  ...
+                                       |  +--N
+                                       +--M/
+                                       |  +--
+                                       |  ...
+                                       |  +--N
+                                </pre>
+                                '''),
+                                name='Download', width=900
                             )
                         ),
                         name='Export'
