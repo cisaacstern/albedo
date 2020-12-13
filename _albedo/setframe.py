@@ -39,6 +39,12 @@ class SetFrame(timeseries.TimeSeries):
             
         else:
             self.bin_dict = 'bins == Max: bin_dict not defined.'
+        
+        self.ID = (self.date_string.replace('-','')+'_'
+                   +'R'+str(self.resolution)+'_'
+                   +'S'+str(self.sigma).replace('.','')+'_'
+                   +'B'+str(self.bins)
+                  )
             
         self.dictionary = {
             'Constants': {

@@ -38,17 +38,23 @@ class DashLayout(dashcontrols.DashControls):
     def video_dispatch(self):
         if self.run_state == True:
             pass
+        elif self.run_counter == 0:
+            return pn.Row('Run model to generate a video record')
         else:
-            vid_path = os.path.join(os.getcwd(), 'exports', 'animation.mp4')
+            vid_path = os.path.join(os.getcwd(), 'exports', 
+                                    f'{self.ID}', 'outputs', f'{self.ID}.mp4')
+                        
             return pn.pane.Video(vid_path, loop=False)
         
     @param.depends('run_state')
     def download_dispatch(self):
         if self.run_state == True:
             pass
+        elif self.run_counter == 0:
+            return pn.Row('Run model to generate a downloadable archive')
         else:
             return pn.widgets.FileDownload(
-                file='exports/archive.zip',button_type='default',auto=False,
+                file=f'exports/{self.ID}.zip',button_type='default',auto=False,
                 embed=True)
     
     @param.depends('date')
@@ -119,18 +125,12 @@ class DashLayout(dashcontrols.DashControls):
             self.reset_run_state, self.update_config
         )
         self.model_tabs = pn.Row(
-            pn.Tabs(pn.pane.Markdown(self.return_README(),
-                        name='README'
-                    ),
+            pn.Tabs(pn.pane.Markdown(self.return_README(), name='README'),
                     pn.Column(
-                        pn.pane.Markdown(
-                            """### Configure \nHere's how to config."""
-                        ),
+                        pn.pane.Markdown("""### Configure \nConfigure interactively using these tabs."""),
                         pn.Tabs(
                             pn.Column(
-                                pn.Row(
-                                    self.file_selector, self.pointcloud_control
-                                ),
+                                pn.Row(self.file_selector, self.pointcloud_control),
                                 self.axes3d,
                                 name='Date'
                             ),
@@ -159,7 +159,7 @@ class DashLayout(dashcontrols.DashControls):
                                 'Choose array format: .npy, .mat, .ascii',
                                 name='Format',  width=900
                             )
-                        ),
+                        ),      
                         name='Configure'
                     ),
                     pn.Column(
@@ -184,12 +184,10 @@ class DashLayout(dashcontrols.DashControls):
                         ),
                         pn.Tabs(
                             pn.Column(
-                                'Heres the model',
                                 self.video_dispatch,
                                 name='Review'
                             ),
                             pn.Column(
-                                '''Download zip''',
                                 self.download_dispatch,
                                 pn.pane.HTML(
                                 f'''<pre>

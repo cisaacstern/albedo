@@ -41,6 +41,8 @@ class Parameters(dataset.DataSet):
     
     run_state = param.Boolean(False)
     
+    run_counter = param.Integer(0)
+    
     log = param.String('')
     
     progress = pn.widgets.Progress(name='Progress', width=450, height=25,

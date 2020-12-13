@@ -77,7 +77,7 @@ class RunModel(plotmethods.PlotMethods):
         names = ['planar_fit.npy', 'elevation.npy', 'slope.npy', 'aspect.npy',
                  'M.npy', 'masks.npy']
         for a, n in zip(arrs, names):
-            np.save(f'exports/archive/arrays/{n}', a)
+            np.save(f'exports/{self.ID}/outputs/arrays/{n}', a)
         return
             
     def write_mp4(self, img_arrays):
@@ -88,16 +88,16 @@ class RunModel(plotmethods.PlotMethods):
         Writer = animation.writers['ffmpeg']
         writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
         im_ani = animation.ArtistAnimation(fig, ims, interval=200, repeat_delay=3000, blit=False)
-        im_ani.save('exports/animation.mp4', writer=writer)
+        im_ani.save(f'exports/{self.ID}/outputs/{self.ID}.mp4', writer=writer)
         return
     
     def dump_json(self):
-        with open('exports/archive/config.json', 'w') as outfile:
+        with open(f'exports/{self.ID}/outputs/config.json', 'w') as outfile:
             json.dump(self.dictionary, outfile, indent=4)
         return
     
     def save_log(self):
-        with open('exports/archive/build_log.txt', 'w') as outfile:
+        with open(f'exports/{self.ID}/outputs/build_log.txt', 'w') as outfile:
             log = self.log.replace('<pre style="color:lime">', '')
             log = log.replace('</pre>', '')
             outfile.write(log)
@@ -107,20 +107,28 @@ class RunModel(plotmethods.PlotMethods):
         '''
         
         '''
+        ID = self.ID
+        
         raw_fn = self.filename[:-8]+'PC.csv'
+        rad_fn = self.filename[:-8]+'radiometers.csv'
         raw_out = 'raw.csv'
-        nbpc_out = 'snowsurface.csv'
-        subprocess.run(['rm', '-r', 'archive/animation.mp4'], cwd='exports/')
-        subprocess.run(['cp', 'animation.mp4', 'archive/animation.mp4'], 
-                       cwd='exports/')
-        subprocess.run(['rm', '-r', 'archive/pointclouds'], cwd='exports/')
-        subprocess.run(['mkdir', 'archive/pointclouds'], cwd='exports/')
-        subprocess.run(['cp', 
-                        f'data/pointclouds/{self.filename}', 
-                        f'exports/archive/pointclouds/{nbpc_out}'])
-        subprocess.run(['cp', f'data/raw/{raw_fn}', 
-                        f'exports/archive/pointclouds/{raw_out}'])
-        subprocess.run(['zip', '-r', 'archive.zip', 'archive'], cwd='exports/')
+        rad_out = 'radiometers.csv'
+        nbpc_out= 'snowsurface.csv'
+        
+        subprocess.run(['mkdir', f'exports/{ID}'])
+        subprocess.run(['mkdir', f'exports/{ID}/inputs'])
+        subprocess.run(['mkdir', f'exports/{ID}/outputs'])
+        subprocess.run(['mkdir', f'exports/{ID}/outputs/arrays'])
+        
+        #subprocess.run(['cp', f'{ID}.mp4', f'{ID}/outputs/{ID}.mp4'], cwd='exports/')
+        
+        subprocess.run(['cp', f'data/pointclouds/{self.filename}', f'exports/{ID}/inputs/{nbpc_out}'])
+        subprocess.run(['cp', f'data/radiometers/{rad_fn}', f'exports/{ID}/inputs/{rad_out}'])
+        subprocess.run(['cp', f'data/raw/{raw_fn}',  f'exports/{ID}/inputs/{raw_out}'])
+        return
+    
+    def zip_archive(self):
+        subprocess.run(['zip', '-r', f'{self.ID}.zip', f'{self.ID}'], cwd='exports/')
         return
     
     @param.depends('run')
@@ -134,11 +142,15 @@ class RunModel(plotmethods.PlotMethods):
             self.update_run_log(local_t)
             
             #runnnn!
-            plt.close('all')                
+            plt.close('all') 
+            
+            self.subprocess_calls()
+            self.log += '\nCreated model directory on disk.'
+            
             df = self.dataframe.copy(deep=True)
             ncols = self.dataframe.shape[0]
             self.progress.max = ncols-1
-            self.log += '\nCopied dataframe'
+            self.log += '\nCreated model dataframe'
             
             self.log += '\nAdding planar & raster albedo to dataframe...'
             #PLANAR M + ALBEDO
@@ -212,7 +224,7 @@ class RunModel(plotmethods.PlotMethods):
             self.log += 'Complete'
             
             self.log += '\nWriting dataframe.csv, config.json, & arrays/ to file...'
-            df.to_csv(r'exports/archive/dataframe.csv')
+            df.to_csv(f'exports/{self.ID}/outputs/dataframe.csv')
             self.dump_json()
             self.export_arrays(m, masks)
             self.log += 'Complete'
@@ -235,9 +247,10 @@ class RunModel(plotmethods.PlotMethods):
             </pre>
             """            
             self.save_log()
-            self.subprocess_calls()
+            self.zip_archive()
             
             self.modelComplete = 'Complete'
+            self.run_counter =+ 1
             self.run_state = False
 
             return 

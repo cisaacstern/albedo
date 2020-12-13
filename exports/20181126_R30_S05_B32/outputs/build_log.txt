@@ -1,5 +1,5 @@
 
-Sun Dec 13 11:52:11 2020, model queued with config:
+Sun Dec 13 15:43:54 2020, model queued with config:
         Date: 2018-11-26
         Raster: {'Resolution': 30, 'Sigma': 0.5}
         Geotransform: [0, 0.1, 0, 0, 0, 0.1]
@@ -8,15 +8,16 @@ Sun Dec 13 11:52:11 2020, model queued with config:
              92.9, 104.5, 116.1, 127.7, 139.4, 151.0, 162.6, 174.2
             185.8, 197.4, 209.0, 220.6, 232.3, 243.9, 255.5, 267.1
             278.7, 290.3, 301.9, 313.5, 325.2, 336.8, 348.4, 360.0
-Copied dataframe
+Created model directory on disk.
+Created model dataframe
 Adding planar & raster albedo to dataframe...Complete
 Running horizon model...Complete
 Adding horizon M/albedo, and viz% to dataframe...Complete
 Building mp4 frames...Complete
 Writing mp4...Complete
 Writing dataframe.csv, config.json, & arrays/ to file...Complete
-Model completed in 61.2767s.
-            1.5712s/timepoint for array of 900 cells @ 39 timepoints
+Model completed in 62.2733s.
+            1.5968s/timepoint for array of 900 cells @ 39 timepoints
             binned as 11 azimuths.
             
             
