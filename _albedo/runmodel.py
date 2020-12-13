@@ -8,10 +8,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+import subprocess
+import json
+
 class RunModel(plotmethods.PlotMethods):
       
     def albedo(self, df, row, choice):
             '''
+            
             '''
             for col in df.columns:
                 if col.startswith('downward looking'):
@@ -30,9 +34,8 @@ class RunModel(plotmethods.PlotMethods):
                 c = df['maskedmeanM'].iloc[row]
 
             return D_up/((c*B_down)+D_down)
-        
     
-    def update_run_log(self):
+    def update_run_log(self, local_t):
         '''
         
         '''
@@ -46,7 +49,7 @@ class RunModel(plotmethods.PlotMethods):
         raster_key, raster_vals = config_value_keys[1], config_value_vals[1]
         xgeo_key, xgeo_val = config_value_keys[2], config_value_vals[2]
         azi_key, azi_vals = config_value_keys[3], config_value_vals[3]
-        self.log += f"""\nModel queued with config:
+        self.log += f"""\n{local_t}, model queued with config:
         {date_key}: {date_val}
         {raster_key}: {raster_vals}
         {xgeo_key}: {xgeo_val}
@@ -68,6 +71,58 @@ class RunModel(plotmethods.PlotMethods):
         
         return
     
+    def export_arrays(self, m_arr, mask_arr):
+        arrs = [self.pFit(), self.elevRast, self.slopeRast, self.aspectRast,
+               m_arr, mask_arr]
+        names = ['planar_fit.npy', 'elevation.npy', 'slope.npy', 'aspect.npy',
+                 'M.npy', 'masks.npy']
+        for a, n in zip(arrs, names):
+            np.save(f'exports/archive/arrays/{n}', a)
+        return
+            
+    def write_mp4(self, img_arrays):
+        # Set up formatting for the movie files
+        fig = plt.figure(tight_layout=True, dpi=self.dpi)
+        plt.axis('off')
+        ims = [(plt.imshow(img),) for img in img_arrays]
+        Writer = animation.writers['ffmpeg']
+        writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
+        im_ani = animation.ArtistAnimation(fig, ims, interval=200, repeat_delay=3000, blit=False)
+        im_ani.save('exports/animation.mp4', writer=writer)
+        return
+    
+    def dump_json(self):
+        with open('exports/archive/config.json', 'w') as outfile:
+            json.dump(self.dictionary, outfile, indent=4)
+        return
+    
+    def save_log(self):
+        with open('exports/archive/build_log.txt', 'w') as outfile:
+            log = self.log.replace('<pre style="color:lime">', '')
+            log = log.replace('</pre>', '')
+            outfile.write(log)
+        return
+            
+    def subprocess_calls(self):
+        '''
+        
+        '''
+        raw_fn = self.filename[:-8]+'PC.csv'
+        raw_out = 'raw.csv'
+        nbpc_out = 'snowsurface.csv'
+        subprocess.run(['rm', '-r', 'archive/animation.mp4'], cwd='exports/')
+        subprocess.run(['cp', 'animation.mp4', 'archive/animation.mp4'], 
+                       cwd='exports/')
+        subprocess.run(['rm', '-r', 'archive/pointclouds'], cwd='exports/')
+        subprocess.run(['mkdir', 'archive/pointclouds'], cwd='exports/')
+        subprocess.run(['cp', 
+                        f'data/pointclouds/{self.filename}', 
+                        f'exports/archive/pointclouds/{nbpc_out}'])
+        subprocess.run(['cp', f'data/raw/{raw_fn}', 
+                        f'exports/archive/pointclouds/{raw_out}'])
+        subprocess.run(['zip', '-r', 'archive.zip', 'archive'], cwd='exports/')
+        return
+    
     @param.depends('run')
     def run_model(self): 
         if self.run == False:
@@ -75,7 +130,8 @@ class RunModel(plotmethods.PlotMethods):
         elif self.run == True:
             self.run_state = True
             start_t = time.time()
-            self.update_run_log()
+            local_t = time.ctime(start_t)
+            self.update_run_log(local_t)
             
             #runnnn!
             plt.close('all')                
@@ -84,6 +140,7 @@ class RunModel(plotmethods.PlotMethods):
             self.progress.max = ncols-1
             self.log += '\nCopied dataframe'
             
+            self.log += '\nAdding planar & raster albedo to dataframe...'
             #PLANAR M + ALBEDO
             self.p_slope, self.p_aspect = self.planar_slope_aspect()
             Mp_list = [self.M_calculation(df, row, choice='planar') 
@@ -92,33 +149,21 @@ class RunModel(plotmethods.PlotMethods):
             Ap_list = [self.albedo(df, row, choice='planar')
                        for row in range(ncols)]
             df.insert(9, 'Albedo_planar', Ap_list)
-            self.log += '\nAdded planar M and albedo to dataframe'
-
             #RASTER meanM and RASTER_mean_ALPHA
             meanM_list = [
                 np.mean(self.M_calculation(df=df, row=row, choice='raster')) 
-                for row in range(ncols)
-            ]
+                for row in range(ncols)]
             df.insert(10, 'raster_meanM', meanM_list)
-            meanAlpha_list = [
-                self.albedo(df, row, choice = 'raster') 
-                for row in range(ncols)
-            ]
+            meanAlpha_list = [self.albedo(df, row, choice = 'raster') 
+                              for row in range(ncols)]
             df.insert(11, 'raster_meanALPHA', meanAlpha_list)
-            self.log += """\nAdded raster M and albedo to dataframe
-            Running horizon model...
-            """            
-
-            maskedmeanM_list, viz_percent_list = [], []
-            self.img_arrays = []
+            self.log += 'Complete'
             
+            self.log += '\nRunning horizon model...'     
+            maskedmeanM_list, viz_percent_list, img_arrays = [], [], []   
             for index in range(ncols):
                 plt.close('all')
                 #trigger new raster set
-                #  NOTE: I believe this cannot be easily converted
-                #        to list comprehensions, given that it req-
-                #        uires triggering this 'cascade' of state 
-                #        rasters by indexing self.time parameter.
                 self.time = index
                 #calculate viz %
                 unique, counts = np.unique(self.mask, return_counts=True)
@@ -134,51 +179,47 @@ class RunModel(plotmethods.PlotMethods):
                                        self.polarAxes(),
                                        self.diptych())
                 lower_set = np.hstack((t_arr, p_arr, d_arr))
-                self.img_arrays.append(lower_set)
-                print('lower_set append complete')    
+                img_arrays.append(lower_set)
+
                 #calc masked M
-                m = self.M_calculation(df, row=index, choice='masked')
+                #m = self.M_calculation(df, row=index, choice='masked')
+                m = self.m if index == 0 else np.dstack((m, self.m))
+                masks = self.mask if index == 0 else np.dstack((masks, self.mask))
                 maskedmeanM = np.mean(m)
                 maskedmeanM_list.append(maskedmeanM)
                 #update progress bar
                 self.progress.value = self.time
+            self.log += 'Complete'
             
             self.log+='\nAdding horizon M/albedo, and viz% to dataframe...'
-
             df.insert(12, 'maskedmeanM', maskedmeanM_list)
-            maskedAlbedo_list = [
-                self.albedo(df, row, choice = 'masked')
-                for row in range(ncols)
-            ]
+            maskedAlbedo_list = [self.albedo(df, row, choice = 'masked')
+                                 for row in range(ncols)]
             df.insert(13, 'maskedAlbedo', maskedAlbedo_list) 
             viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
             df.insert(14, 'viz_percent', viz_percent_list)
+            self.log += 'Complete'
               
             self.log += '\nBuilding mp4 frames...'
-            #ts_array = self.timeSeries_Plot(df)
-            self.img_arrays = [
+            img_arrays = [
                 np.vstack((self.timeSeries_Plot(df, mx), lower_set))
-                for mx, lower_set in enumerate(self.img_arrays, start=1)
+                for mx, lower_set in enumerate(img_arrays, start=1)
             ]
+            self.log += 'Complete'
             
             self.log += '\nWriting mp4...'
-            ####MOVIE MADNESS#####
-            # Set up formatting for the movie files
-            fig2 = plt.figure(tight_layout=True, dpi=self.dpi)
-            plt.axis('off')
-            ims = [(plt.imshow(img),) for img in self.img_arrays]
-            Writer = animation.writers['ffmpeg']
-            writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
-            im_ani = animation.ArtistAnimation(fig2, ims, interval=200, repeat_delay=3000, blit=False)
-            im_ani.save('exports/animation.mp4', writer=writer)
-            ####END MOVIE MADNESS#####
+            self.write_mp4(img_arrays)
+            self.log += 'Complete'
             
-            self.log += 'Writing model_dataframe.csv to file...'
-            df.to_csv(r'exports/model_dataframe.csv')
+            self.log += '\nWriting dataframe.csv, config.json, & arrays/ to file...'
+            df.to_csv(r'exports/archive/dataframe.csv')
+            self.dump_json()
+            self.export_arrays(m, masks)
+            self.log += 'Complete'
             
             del (Mp_list, Ap_list, meanM_list, meanAlpha_list, 
                  maskedmeanM_list, maskedAlbedo_list, viz_percent_list, 
-                 self.img_arrays)
+                 img_arrays, m, masks)
 
             self.time = 0
             self.model_dataframe = df
@@ -187,13 +228,15 @@ class RunModel(plotmethods.PlotMethods):
             cell_t, ar_cs = np.around(run_t/ncols, 4), self.resolution**2
             unique_bins = (len(np.unique(df['bin_assignment'])) 
                            if self.bins!='Max' else ncols) 
-                           
             
             self.log+=f"""<pre style="color:lime">\nModel completed in {run_t}s.
             {cell_t}s/timepoint for array of {ar_cs} cells @ {ncols} timepoints
             binned as {unique_bins} azimuths.
             </pre>
-            """
+            """            
+            self.save_log()
+            self.subprocess_calls()
+            
             self.modelComplete = 'Complete'
             self.run_state = False
 

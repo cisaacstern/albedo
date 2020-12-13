@@ -48,7 +48,7 @@ class DashLayout(dashcontrols.DashControls):
             pass
         else:
             return pn.widgets.FileDownload(
-                file='exports/animation.mp4',button_type='default',auto=False,
+                file='exports/archive.zip',button_type='default',auto=False,
                 embed=True)
     
     @param.depends('date')
@@ -89,6 +89,7 @@ class DashLayout(dashcontrols.DashControls):
     @param.depends('dictionary')
     def reset_run_state(self):
         self.run = False
+        self.log = ''
         self.progress.value = 0
         if self.modelComplete == 'Complete':
             self.modelComplete = 'Incomplete'
@@ -192,37 +193,22 @@ class DashLayout(dashcontrols.DashControls):
                                 self.download_dispatch,
                                 pn.pane.HTML(
                                 f'''<pre>
-                                %Y%M%D_%R%S%B/
-                                +--build_log.txt
-                                +--animation.mp4
-                                +--dataframe.csv
-                                +--pointclouds/
-                                |  +--raw.csv
-                                |  +--snowsurface.csv
-                                |  +--planarfit.csv
-                                +--arrays/
-                                    +--time_invariant/
-                                    |  +--elevation
-                                    |  +--slope
-                                    |  +--aspect
-                                    +--time_dependant/
-                                       +--elevation/
-                                       |  +--
-                                       |  ...
-                                       |  +--N
-                                       +--slope/
-                                       |  +--
-                                       |  ...
-                                       |  +--N
-                                       +--aspect/
-                                       |  +--
-                                       |  ...
-                                       |  +--N
-                                       +--M/
-                                       |  +--
-                                       |  ...
-                                       |  +--N
-                                </pre>
+            CONFIG_archive/
+            +--config.json
+            +--build_log.txt
+            +--animation.mp4
+            +--dataframe.csv
+            +--pointclouds/
+            |  +--raw.csv
+            |  +--snowsurface.csv
+            +--arrays/
+               +--planar_fit (20, 20, 3)
+               +--elevation  (?, ?)
+               +--slope      (?, ?)
+               +--aspect     (?, ?)
+               +--M          (?, ?, N)
+               +--masks      (?, ?, N)
+            </pre>
                                 '''),
                                 name='Download', width=900
                             )

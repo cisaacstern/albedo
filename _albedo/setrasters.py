@@ -12,7 +12,7 @@ class SetRasters(horizonmethods.HorizonMethods):
         self.elevRast, self.slopeRast, self.aspectRast = self.griddata_transforms()
         return
     
-    @param.depends('dictionary', 'time')
+    @param.depends('date', 'resolution', 'sigma', 'bins', 'time')
     def set_m(self):
         self.m = self.M_calculation(df=self.dataframe, 
                                     row=self.time,
@@ -20,7 +20,7 @@ class SetRasters(horizonmethods.HorizonMethods):
                                    )
         return
     
-    @param.depends('dictionary', 'time')
+    @param.depends('date', 'resolution', 'sigma', 'bins', 'time')
     def set_masks(self):
         self.mask = self.rerotM_2()
         self.masked_elev = ma.masked_where(self.mask == 1, self.elevRast)
