@@ -31,9 +31,7 @@ class GridData(pointdata.PointData):
     def np2rdarray(self, in_array, no_data=-9999):
         out_array = rd.rdarray(in_array, no_data=no_data)
         out_array.projection = self.projection
-        cell_scale = np.around(3/self.resolution, 5)
-        out_array.geotransform = [0, cell_scale, 0, 0, 0, cell_scale]
-        self.geotransform = out_array.geotransform
+        out_array.geotransform = self.geotransform
         return out_array
     
     def raster_slope_aspect(self, gaussianArray):

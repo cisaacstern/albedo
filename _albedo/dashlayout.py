@@ -5,10 +5,24 @@ import matplotlib.pyplot as plt
 import markdown
 import numpy as np
 import os
+import subprocess
+import time
 
 class DashLayout(dashcontrols.DashControls):
     
+    def start_session(self):
+        '''
+        
+        '''
+        name = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+        self.session = name + '_' + str(time.monotonic_ns())
+        subprocess.run(['mkdir', f'exports/{self.session}'])
+        return
+    
     def return_README(self):
+        '''
+        
+        '''
         with open('README.md','r') as f:
             html = markdown.markdown(f.read())
         return html
@@ -36,25 +50,31 @@ class DashLayout(dashcontrols.DashControls):
             
     @param.depends('run_state')
     def video_dispatch(self):
+        s = self.session
+        ID = self.ID
+        #return video player
         if self.run_state == True:
             pass
         elif self.run_counter == 0:
             return pn.Row('Run model to generate a video record')
         else:
-            vid_path = os.path.join(os.getcwd(), 'exports', 
-                                    f'{self.ID}', 'outputs', f'{self.ID}.mp4')
+            vid_path = os.path.join(os.getcwd(), 'exports', f'{s}', f'{ID}', 
+                                    'outputs', f'{self.ID}.mp4')
                         
             return pn.pane.Video(vid_path, loop=False)
         
     @param.depends('run_state')
     def download_dispatch(self):
+        s = self.session
+        ID = self.ID
+        #return download button
         if self.run_state == True:
             pass
         elif self.run_counter == 0:
             return pn.Row('Run model to generate a downloadable archive')
         else:
             return pn.widgets.FileDownload(
-                file=f'exports/{self.ID}.zip',button_type='default',auto=False,
+                file=f'exports/{s}/{ID}.zip',button_type='default',auto=False,
                 embed=True)
     
     @param.depends('date')
@@ -84,25 +104,14 @@ class DashLayout(dashcontrols.DashControls):
                'border-radius': '5px', 'padding': '10px','width':'560px'}
     )
     
-    @param.depends('modelComplete')
-    def return_model_df(self):
-        if self.modelComplete == 'Incomplete':
-            return pn.Row('Run model to generate dataframe.')
-        else:
-            return pn.pane.DataFrame(self.model_dataframe, 
-                                     max_rows=4, max_cols=7, width=900)
-    
     @param.depends('dictionary')
     def reset_run_state(self):
         self.run = False
         self.log = ''
         self.progress.value = 0
-        if self.modelComplete == 'Complete':
-            self.modelComplete = 'Incomplete'
-            del self.model_dataframe
         return
     
-    @param.depends('modelComplete')
+    @param.depends('run_state', 'dictionary')
     def return_run_button(self):
         args = dict({'width': 80, 'name':'', 'parameters':['run']})
         enabled = pn.Param(
@@ -113,9 +122,9 @@ class DashLayout(dashcontrols.DashControls):
             self.param, **args, 
             widgets={'run':
                      {'widget_type': pn.widgets.Toggle, 'disabled':True},})
-        if self.modelComplete == 'Incomplete':
+        if self.progress.value == 0:
             return enabled
-        elif self.modelComplete == 'Complete':
+        else:
             return disabled
             
     def set_layout(self):
@@ -191,22 +200,25 @@ class DashLayout(dashcontrols.DashControls):
                                 self.download_dispatch,
                                 pn.pane.HTML(
                                 f'''<pre>
-            CONFIG_archive/
-            +--config.json
-            +--build_log.txt
-            +--animation.mp4
-            +--dataframe.csv
-            +--pointclouds/
-            |  +--raw.csv
-            |  +--snowsurface.csv
-            +--arrays/
-               +--planar_fit (20, 20, 3)
-               +--elevation  (?, ?)
-               +--slope      (?, ?)
-               +--aspect     (?, ?)
-               +--M          (?, ?, N)
-               +--masks      (?, ?, N)
-            </pre>
+            DATE_CONFIG/
+            +--inputs/
+            |   +--raw.csv
+            |   +--snowsurface.csv
+            |   +--radiometers.csv
+            +--outputs/
+            |   +--config.json
+            |   +--build_log.txt
+            |   +--animation.mp4
+            |   +--dataframe.csv
+            |   +--arrays/
+            |      +--planar_fit (20, 20, 3)
+            |      +--elevation  (?, ?)
+            |      +--slope      (?, ?)
+            |      +--aspect     (?, ?)
+            |      +--M          (?, ?, N)
+            |      +--masks      (?, ?, N)
+            +
+                </pre>
                                 '''),
                                 name='Download', width=900
                             )
@@ -222,10 +234,13 @@ class DashLayout(dashcontrols.DashControls):
         return
         
     def dashboard(self):
+        self.start_session()
         self.set_filename()
         self.set_dataframe()
-        self.set_raster()
         self.update_config()
+        self.set_raster()
+        self.set_m()
+        self.set_masks()
         self.set_controls()
         self.set_layout()
         self.horizon_package = self.slope2horz()

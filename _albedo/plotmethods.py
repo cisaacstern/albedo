@@ -13,9 +13,9 @@ import pandas as pd
 
 class PlotMethods(setaxes.SetAxes):
     
-    @param.depends('run', 'modelComplete', 'date', 'elev', 'choose3d')
+    @param.depends('run_state', 'date', 'elev', 'choose3d')
     def axes3d(self, figsize=(6,6), topMargin=1.2, bottomMargin=0):
-        if self.run==True and self.modelComplete == 'Incomplete':
+        if self.run_state == True:
             pass
         else:
             plt.close()

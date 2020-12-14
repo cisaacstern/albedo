@@ -19,7 +19,7 @@ class HorizonMethods(setframe.SetFrame):
             
         return ndimage.rotate(self.elevRast, angle=(-azimuth), reshape=True, 
                               order=0, mode='constant', cval=np.nan)
-
+    
     def fwdHorz2D(self):
         '''
         elevG is the blurred *AND ROTATED* elevation grid. horzPt[] is an empty
@@ -58,7 +58,7 @@ class HorizonMethods(setframe.SetFrame):
                 else:
                     horzPt[i, k] = HorzJ
         return elevG, horzPt
-
+    
     def slope2horz(self):
         '''
         takes a rotated elevation grid and a corresponding horzPt array,
@@ -121,7 +121,6 @@ class HorizonMethods(setframe.SetFrame):
         return tiltedElevG, tiltedMask
 
     #---RE-ROTATION---
-
     def rerotM_2(self):   
         '''
         

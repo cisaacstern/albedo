@@ -3,6 +3,7 @@ holoviews==1.13.5
 hvplot==0.6.0
 Jinja2==2.10.1
 matplotlib==3.3.2
+numba
 numpy==1.19.0
 packaging==20.4
 pandas==1.1.3

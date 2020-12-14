@@ -71,42 +71,11 @@ class RunModel(plotmethods.PlotMethods):
         
         return
     
-    def export_arrays(self, m_arr, mask_arr):
-        arrs = [self.pFit(), self.elevRast, self.slopeRast, self.aspectRast,
-               m_arr, mask_arr]
-        names = ['planar_fit.npy', 'elevation.npy', 'slope.npy', 'aspect.npy',
-                 'M.npy', 'masks.npy']
-        for a, n in zip(arrs, names):
-            np.save(f'exports/{self.ID}/outputs/arrays/{n}', a)
-        return
-            
-    def write_mp4(self, img_arrays):
-        # Set up formatting for the movie files
-        fig = plt.figure(tight_layout=True, dpi=self.dpi)
-        plt.axis('off')
-        ims = [(plt.imshow(img),) for img in img_arrays]
-        Writer = animation.writers['ffmpeg']
-        writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
-        im_ani = animation.ArtistAnimation(fig, ims, interval=200, repeat_delay=3000, blit=False)
-        im_ani.save(f'exports/{self.ID}/outputs/{self.ID}.mp4', writer=writer)
-        return
-    
-    def dump_json(self):
-        with open(f'exports/{self.ID}/outputs/config.json', 'w') as outfile:
-            json.dump(self.dictionary, outfile, indent=4)
-        return
-    
-    def save_log(self):
-        with open(f'exports/{self.ID}/outputs/build_log.txt', 'w') as outfile:
-            log = self.log.replace('<pre style="color:lime">', '')
-            log = log.replace('</pre>', '')
-            outfile.write(log)
-        return
-            
     def subprocess_calls(self):
         '''
         
         '''
+        s = self.session
         ID = self.ID
         
         raw_fn = self.filename[:-8]+'PC.csv'
@@ -115,24 +84,93 @@ class RunModel(plotmethods.PlotMethods):
         rad_out = 'radiometers.csv'
         nbpc_out= 'snowsurface.csv'
         
-        subprocess.run(['mkdir', f'exports/{ID}'])
-        subprocess.run(['mkdir', f'exports/{ID}/inputs'])
-        subprocess.run(['mkdir', f'exports/{ID}/outputs'])
-        subprocess.run(['mkdir', f'exports/{ID}/outputs/arrays'])
+        subprocess.run(['mkdir', f'exports/{s}/{ID}'])
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/inputs'])
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs'])
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs/arrays'])
+                
+        subprocess.run(['cp', f'data/pointclouds/{self.filename}', f'exports/{s}/{ID}/inputs/{nbpc_out}'])
+        subprocess.run(['cp', f'data/radiometers/{rad_fn}', f'exports/{s}/{ID}/inputs/{rad_out}'])
+        subprocess.run(['cp', f'data/raw/{raw_fn}',  f'exports/{s}/{ID}/inputs/{raw_out}'])
+        return
+    
+    def export_arrays(self, m_arr, mask_arr):
+        '''
         
-        #subprocess.run(['cp', f'{ID}.mp4', f'{ID}/outputs/{ID}.mp4'], cwd='exports/')
+        '''
+        s = self.session
+        ID = self.ID
+        #save arrays
+        arrs = [self.pFit(), self.elevRast, self.slopeRast, self.aspectRast,
+               m_arr, mask_arr]
+        names = ['planar_fit.npy', 'elevation.npy', 'slope.npy', 'aspect.npy',
+                 'M.npy', 'masks.npy']
+        for a, n in zip(arrs, names):
+            np.save(f'exports/{s}/{ID}/outputs/arrays/{n}', a)
+        return
+            
+    def write_mp4(self, img_arrays):
+        '''
         
-        subprocess.run(['cp', f'data/pointclouds/{self.filename}', f'exports/{ID}/inputs/{nbpc_out}'])
-        subprocess.run(['cp', f'data/radiometers/{rad_fn}', f'exports/{ID}/inputs/{rad_out}'])
-        subprocess.run(['cp', f'data/raw/{raw_fn}',  f'exports/{ID}/inputs/{raw_out}'])
+        '''
+        s = self.session
+        ID = self.ID
+        # Set up formatting for the movie files
+        fig = plt.figure(tight_layout=True, dpi=self.dpi)
+        plt.axis('off')
+        ims = [(plt.imshow(img),) for img in img_arrays]
+        Writer = animation.writers['ffmpeg']
+        writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
+        im_ani = animation.ArtistAnimation(fig, ims, interval=200, repeat_delay=3000, blit=False)
+        im_ani.save(f'exports/{s}/{ID}/outputs/{self.ID}.mp4', writer=writer)
+        return
+    
+    def dump_json(self):
+        '''
+        
+        '''
+        s = self.session
+        ID = self.ID
+        with open(f'exports/{s}/{ID}/outputs/config.json', 'w') as outfile:
+            json.dump(self.dictionary, outfile, indent=4)
+        return
+    
+    def save_log(self):
+        '''
+        
+        '''
+        s = self.session
+        ID = self.ID
+        with open(f'exports/{s}/{ID}/outputs/build_log.txt', 'w') as outfile:
+            log = self.log.replace('<pre style="color:lime">', '')
+            log = log.replace('</pre>', '')
+            outfile.write(log)
+        return
+    
+    def export_df(self, df):
+        '''
+        
+        '''
+        s = self.session
+        ID = self.ID
+        #export dataframe
+        df.to_csv(f'exports/{s}/{ID}/outputs/dataframe.csv')
         return
     
     def zip_archive(self):
-        subprocess.run(['zip', '-r', f'{self.ID}.zip', f'{self.ID}'], cwd='exports/')
+        '''
+        
+        '''
+        s = self.session
+        ID = self.ID
+        subprocess.run(['zip', '-r', f'{ID}.zip', f'{ID}'], cwd=f'exports/{s}')
         return
     
     @param.depends('run')
     def run_model(self): 
+        '''
+        
+        '''
         if self.run == False:
             pass
         elif self.run == True:
@@ -149,7 +187,7 @@ class RunModel(plotmethods.PlotMethods):
             
             df = self.dataframe.copy(deep=True)
             ncols = self.dataframe.shape[0]
-            self.progress.max = ncols-1
+            self.progress.max = (ncols-1)+10
             self.log += '\nCreated model dataframe'
             
             self.log += '\nAdding planar & raster albedo to dataframe...'
@@ -211,6 +249,7 @@ class RunModel(plotmethods.PlotMethods):
             viz_percent_list = [item*3 for item in viz_percent_list] #norm-ing
             df.insert(14, 'viz_percent', viz_percent_list)
             self.log += 'Complete'
+            self.progress.value += 2
               
             self.log += '\nBuilding mp4 frames...'
             img_arrays = [
@@ -218,16 +257,19 @@ class RunModel(plotmethods.PlotMethods):
                 for mx, lower_set in enumerate(img_arrays, start=1)
             ]
             self.log += 'Complete'
+            self.progress.value += 2
             
             self.log += '\nWriting mp4...'
             self.write_mp4(img_arrays)
             self.log += 'Complete'
+            self.progress.value += 2
             
             self.log += '\nWriting dataframe.csv, config.json, & arrays/ to file...'
-            df.to_csv(f'exports/{self.ID}/outputs/dataframe.csv')
+            self.export_df(df)
             self.dump_json()
             self.export_arrays(m, masks)
             self.log += 'Complete'
+            self.progress.value += 2
             
             del (Mp_list, Ap_list, meanM_list, meanAlpha_list, 
                  maskedmeanM_list, maskedAlbedo_list, viz_percent_list, 
@@ -245,11 +287,11 @@ class RunModel(plotmethods.PlotMethods):
             {cell_t}s/timepoint for array of {ar_cs} cells @ {ncols} timepoints
             binned as {unique_bins} azimuths.
             </pre>
-            """            
+            """
+            self.progress.value += 2
             self.save_log()
             self.zip_archive()
             
-            self.modelComplete = 'Complete'
             self.run_counter =+ 1
             self.run_state = False
 

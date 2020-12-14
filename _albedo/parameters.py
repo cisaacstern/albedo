@@ -18,21 +18,21 @@ class Parameters(dataset.DataSet):
     vertEx     = param.Number(1.0)
     
     set_measurements   = param.ListSelector(
-                            default=['Global Up', 'Direct Dwn', 'Diffuse Dwn'],
+                            default=['Global Up'],
                             objects=['Global Up', 'Direct Dwn', 'Diffuse Dwn'])
     set_planar_curves  = param.ListSelector(
                             default=['M','Alpha'], objects=['M','Alpha','IDR'])
     set_raster_curves  = param.ListSelector(
                             default=[], objects=['M','Alpha','IDR'])
     set_horizon_curves = param.ListSelector(
-                            default=[], objects=['M','Alpha','IDR'])
+                            default=['M','Alpha'], objects=['M','Alpha','IDR'])
     set_curve_filler   = param.ListSelector(
                             default=[], 
                             objects=['> Selected M\'s', '> Selected Alpha\'s', 
                                      '> Selected IDR\'s'])
-    set_visibile_curve = param.Boolean(False)
+    set_visibile_curve = param.Boolean(True)
     
-    activateMask = param.Selector(default='Remove', objects=['Overlay', 'Remove'])
+    activateMask = param.Selector(default='Overlay', objects=['Overlay', 'Remove'])
     
     bins = param.ObjectSelector(default=32,
                                 objects=[8, 16, 24, 32, 40, 48, 56, 64, 'Max'])
@@ -47,9 +47,6 @@ class Parameters(dataset.DataSet):
     
     progress = pn.widgets.Progress(name='Progress', width=450, height=25,
                                    value=0, bar_color='info')
-    
-    modelComplete = param.ObjectSelector(default="Incomplete", 
-                                         objects=["Incomplete", "Complete"])
     
     dictionary = param.Dict(default={"default": "dictionary"})
     

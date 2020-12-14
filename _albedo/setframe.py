@@ -24,6 +24,9 @@ class SetFrame(timeseries.TimeSeries):
     @param.depends('date', 'resolution', 'sigma', 'bins')
     def update_config(self):
         
+        cell_scale = np.around(3/self.resolution, 5)
+        self.geotransform = [0, cell_scale, 0, 0, 0, cell_scale]
+        
         if self.bins != 'Max':
             bin_array       = np.linspace(0,360,self.bins,endpoint=True)
             real_azis       = self.dataframe['solarAzimuth'].to_numpy(copy=True)
