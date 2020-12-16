@@ -1,4 +1,5 @@
-import _albedo.pointdata as pointdata
+import albedo._albedo.pointdata as pointdata
+#import _albedo.pointdata as pointdata
 import numpy as np
 from scipy import interpolate, ndimage
 import richdem as rd

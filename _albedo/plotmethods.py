@@ -1,4 +1,5 @@
-import _albedo.setaxes as setaxes
+import albedo._albedo.setaxes as setaxes
+#import _albedo.setaxes as setaxes
 import param
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D

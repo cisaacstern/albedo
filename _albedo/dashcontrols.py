@@ -1,4 +1,5 @@
-import _albedo.runmodel as runmodel
+import albedo._albedo.runmodel as runmodel
+#import _albedo.runmodel as runmodel
 import panel as pn
 
 class DashControls(runmodel.RunModel):

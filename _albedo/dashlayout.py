@@ -1,4 +1,5 @@
-import _albedo.dashcontrols as dashcontrols
+import albedo._albedo.dashcontrols as dashcontrols
+#import _albedo.dashcontrols as dashcontrols
 import param
 import panel as pn
 import matplotlib.pyplot as plt
@@ -16,14 +17,14 @@ class DashLayout(dashcontrols.DashControls):
         '''
         name = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         self.session = name + '_' + str(time.monotonic_ns())
-        subprocess.run(['mkdir', f'exports/{self.session}'])
+        subprocess.run(['mkdir', f'albedo/exports/{self.session}'])
         return
     
     def return_README(self):
         '''
         
         '''
-        with open('README.md','r') as f:
+        with open('albedo/README.md','r') as f:
             html = markdown.markdown(f.read())
         return html
     
@@ -61,7 +62,7 @@ class DashLayout(dashcontrols.DashControls):
             vid_path = os.path.join(os.getcwd(), 'exports', f'{s}', f'{ID}', 
                                     'outputs', f'{self.ID}.mp4')
                         
-            return pn.pane.Video(vid_path, loop=False)
+            return pn.pane.Video(vid_path, loop=False, width=900)
         
     @param.depends('run_state')
     def download_dispatch(self):
@@ -240,9 +241,9 @@ class DashLayout(dashcontrols.DashControls):
         self.update_config()
         self.set_raster()
         self.set_m()
+        self.horizon_package = self.slope2horz()
         self.set_masks()
         self.set_controls()
         self.set_layout()
-        self.horizon_package = self.slope2horz()
         return pn.Column(self.function_row,
                          self.model_tabs)

@@ -1,4 +1,5 @@
-import _albedo.plotmethods as plotmethods
+import albedo._albedo.plotmethods as plotmethods
+#import _albedo.plotmethods as plotmethods
 import param
 import time
 import numpy as np
@@ -116,7 +117,7 @@ class RunModel(plotmethods.PlotMethods):
         s = self.session
         ID = self.ID
         # Set up formatting for the movie files
-        fig = plt.figure(tight_layout=True, dpi=self.dpi)
+        fig = plt.figure(tight_layout=True, dpi=300)
         plt.axis('off')
         ims = [(plt.imshow(img),) for img in img_arrays]
         Writer = animation.writers['ffmpeg']

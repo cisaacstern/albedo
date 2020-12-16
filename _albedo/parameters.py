@@ -1,4 +1,5 @@
-import _albedo.dataset as dataset
+import albedo._albedo.dataset as dataset
+#import _albedo.dataset as dataset
 import param
 import panel as pn
 import datetime
@@ -50,4 +51,4 @@ class Parameters(dataset.DataSet):
     
     dictionary = param.Dict(default={"default": "dictionary"})
     
-    dpi = param.Integer(50)
+    dpi = param.Integer(100)

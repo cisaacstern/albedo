@@ -1,4 +1,5 @@
-import _albedo.griddata as griddata
+import albedo._albedo.griddata as griddata
+#import _albedo.griddata as griddata
 import pandas as pd
 import datetime
 from pysolar import solar

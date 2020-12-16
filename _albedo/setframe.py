@@ -1,4 +1,5 @@
-import _albedo.timeseries as timeseries
+import albedo._albedo.timeseries as timeseries
+#import _albedo.timeseries as timeseries
 import param
 from datetime import timedelta
 import numpy as np

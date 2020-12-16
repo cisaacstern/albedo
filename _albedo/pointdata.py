@@ -1,4 +1,5 @@
-import _albedo.parameters as parameters
+import albedo._albedo.parameters as parameters
+#import _albedo.parameters as parameters
 import param
 import numpy as np
 from scipy import linalg
