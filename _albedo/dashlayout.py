@@ -1,4 +1,5 @@
-import albedo._albedo.dashcontrols as dashcontrols
+import homepage.albedo._albedo.dashcontrols as dashcontrols
+#import albedo._albedo.dashcontrols as dashcontrols
 #import _albedo.dashcontrols as dashcontrols
 import param
 import panel as pn
@@ -15,16 +16,17 @@ class DashLayout(dashcontrols.DashControls):
         '''
         
         '''
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
         name = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         self.session = name + '_' + str(time.monotonic_ns())
-        subprocess.run(['mkdir', f'albedo/exports/{self.session}'])
+        subprocess.run(['mkdir', f'exports/{self.session}'], cwd=CWD)
         return
     
     def return_README(self):
         '''
         
         '''
-        with open('albedo/README.md','r') as f:
+        with open('homepage/albedo/README.md','r') as f:
             html = markdown.markdown(f.read())
         return html
     
@@ -59,8 +61,8 @@ class DashLayout(dashcontrols.DashControls):
         elif self.run_counter == 0:
             return pn.Row('Run model to generate a video record')
         else:
-            vid_path = os.path.join(os.getcwd(), 'exports', f'{s}', f'{ID}', 
-                                    'outputs', f'{self.ID}.mp4')
+            vid_path = os.path.join(os.getcwd(), 'homepage', 'albedo', 'exports', 
+                                    f'{s}', f'{ID}', 'outputs', f'{self.ID}.mp4')
                         
             return pn.pane.Video(vid_path, loop=False, width=900)
         
@@ -68,6 +70,7 @@ class DashLayout(dashcontrols.DashControls):
     def download_dispatch(self):
         s = self.session
         ID = self.ID
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
         #return download button
         if self.run_state == True:
             pass
@@ -75,7 +78,7 @@ class DashLayout(dashcontrols.DashControls):
             return pn.Row('Run model to generate a downloadable archive')
         else:
             return pn.widgets.FileDownload(
-                file=f'exports/{s}/{ID}.zip',button_type='default',auto=False,
+                file=f'{CWD}/exports/{s}/{ID}.zip',button_type='default',auto=False,
                 embed=True)
     
     @param.depends('date')

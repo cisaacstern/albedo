@@ -1,4 +1,5 @@
-import albedo._albedo.horizonmethods as horizonmethods
+import homepage.albedo._albedo.horizonmethods as horizonmethods
+#import albedo._albedo.horizonmethods as horizonmethods
 #import _albedo.horizonmethods as horizonmethods
 import param
 import panel as pn

@@ -1,4 +1,5 @@
-import albedo._albedo.setframe as setframe
+import homepage.albedo._albedo.setframe as setframe
+#import albedo._albedo.setframe as setframe
 #import _albedo.setframe as setframe
 from scipy import ndimage
 import numpy as np

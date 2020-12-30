@@ -1,4 +1,5 @@
-import albedo._albedo.plotmethods as plotmethods
+import homepage.albedo._albedo.plotmethods as plotmethods
+#import albedo._albedo.plotmethods as plotmethods
 #import _albedo.plotmethods as plotmethods
 import param
 import time
@@ -11,6 +12,8 @@ import matplotlib.animation as animation
 
 import subprocess
 import json
+
+import os
 
 class RunModel(plotmethods.PlotMethods):
       
@@ -78,21 +81,22 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
-        
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
+
         raw_fn = self.filename[:-8]+'PC.csv'
         rad_fn = self.filename[:-8]+'radiometers.csv'
         raw_out = 'raw.csv'
         rad_out = 'radiometers.csv'
         nbpc_out= 'snowsurface.csv'
         
-        subprocess.run(['mkdir', f'exports/{s}/{ID}'])
-        subprocess.run(['mkdir', f'exports/{s}/{ID}/inputs'])
-        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs'])
-        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs/arrays'])
+        subprocess.run(['mkdir', f'exports/{s}/{ID}'], cwd=CWD)
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/inputs'], cwd=CWD)
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs'], cwd=CWD)
+        subprocess.run(['mkdir', f'exports/{s}/{ID}/outputs/arrays'], cwd=CWD)
                 
-        subprocess.run(['cp', f'data/pointclouds/{self.filename}', f'exports/{s}/{ID}/inputs/{nbpc_out}'])
-        subprocess.run(['cp', f'data/radiometers/{rad_fn}', f'exports/{s}/{ID}/inputs/{rad_out}'])
-        subprocess.run(['cp', f'data/raw/{raw_fn}',  f'exports/{s}/{ID}/inputs/{raw_out}'])
+        subprocess.run(['cp', f'data/pointclouds/{self.filename}', f'exports/{s}/{ID}/inputs/{nbpc_out}'], cwd=CWD)
+        subprocess.run(['cp', f'data/radiometers/{rad_fn}', f'exports/{s}/{ID}/inputs/{rad_out}'], cwd=CWD)
+        subprocess.run(['cp', f'data/raw/{raw_fn}',  f'exports/{s}/{ID}/inputs/{raw_out}'], cwd=CWD)
         return
     
     def export_arrays(self, m_arr, mask_arr):
@@ -101,13 +105,14 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
         #save arrays
         arrs = [self.pFit(), self.elevRast, self.slopeRast, self.aspectRast,
                m_arr, mask_arr]
         names = ['planar_fit.npy', 'elevation.npy', 'slope.npy', 'aspect.npy',
                  'M.npy', 'masks.npy']
         for a, n in zip(arrs, names):
-            np.save(f'exports/{s}/{ID}/outputs/arrays/{n}', a)
+            np.save(f'{CWD}/exports/{s}/{ID}/outputs/arrays/{n}', a)
         return
             
     def write_mp4(self, img_arrays):
@@ -116,6 +121,7 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
         # Set up formatting for the movie files
         fig = plt.figure(tight_layout=True, dpi=300)
         plt.axis('off')
@@ -123,7 +129,7 @@ class RunModel(plotmethods.PlotMethods):
         Writer = animation.writers['ffmpeg']
         writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
         im_ani = animation.ArtistAnimation(fig, ims, interval=200, repeat_delay=3000, blit=False)
-        im_ani.save(f'exports/{s}/{ID}/outputs/{self.ID}.mp4', writer=writer)
+        im_ani.save(f'{CWD}/exports/{s}/{ID}/outputs/{self.ID}.mp4', writer=writer)
         return
     
     def dump_json(self):
@@ -132,7 +138,8 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
-        with open(f'exports/{s}/{ID}/outputs/config.json', 'w') as outfile:
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
+        with open(f'{CWD}/exports/{s}/{ID}/outputs/config.json', 'w') as outfile:
             json.dump(self.dictionary, outfile, indent=4)
         return
     
@@ -142,7 +149,8 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
-        with open(f'exports/{s}/{ID}/outputs/build_log.txt', 'w') as outfile:
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
+        with open(f'{CWD}/exports/{s}/{ID}/outputs/build_log.txt', 'w') as outfile:
             log = self.log.replace('<pre style="color:lime">', '')
             log = log.replace('</pre>', '')
             outfile.write(log)
@@ -154,8 +162,9 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
         #export dataframe
-        df.to_csv(f'exports/{s}/{ID}/outputs/dataframe.csv')
+        df.to_csv(f'{CWD}/exports/{s}/{ID}/outputs/dataframe.csv')
         return
     
     def zip_archive(self):
@@ -164,7 +173,8 @@ class RunModel(plotmethods.PlotMethods):
         '''
         s = self.session
         ID = self.ID
-        subprocess.run(['zip', '-r', f'{ID}.zip', f'{ID}'], cwd=f'exports/{s}')
+        CWD = os.path.join(os.getcwd(), 'homepage', 'albedo')
+        subprocess.run(['zip', '-r', f'{ID}.zip', f'{ID}'], cwd=f'{CWD}/exports/{s}')
         return
     
     @param.depends('run')

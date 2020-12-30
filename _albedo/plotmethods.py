@@ -1,4 +1,5 @@
-import albedo._albedo.setaxes as setaxes
+import homepage.albedo._albedo.setaxes as setaxes
+#import albedo._albedo.setaxes as setaxes
 #import _albedo.setaxes as setaxes
 import param
 import matplotlib.pyplot as plt

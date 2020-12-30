@@ -16,13 +16,13 @@ class DataSet(param.Parameterized):
     #TODO: transform constants. i.e. richdem vert. exagg.
     
     #filepath constants
-    raw_directory = os.path.join(os.getcwd(), 'albedo', 'data', 'raw')
+    raw_directory = os.path.join(os.getcwd(), 'homepage', 'albedo', 'data', 'raw')
     
-    pointcloud_directory = os.path.join(os.getcwd(), 'albedo', 'data', 'pointclouds')
+    pointcloud_directory = os.path.join(os.getcwd(), 'homepage', 'albedo', 'data', 'pointclouds')
     pointclouds = [file for file in os.listdir(pointcloud_directory)]
     pointclouds.sort()
 
-    rad_directory = os.path.join(os.getcwd(), 'albedo', 'data', 'radiometers')
+    rad_directory = os.path.join(os.getcwd(), 'homepage', 'albedo', 'data', 'radiometers')
     radiometers = [file for file in os.listdir(rad_directory)]
     radiometers.sort()
 
